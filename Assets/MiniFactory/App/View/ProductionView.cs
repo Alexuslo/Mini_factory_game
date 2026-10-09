@@ -31,6 +31,7 @@ namespace MiniFactory.App.View
             var active = _game.IsBoostActive;
             var boost = active ? $" ×{_game.Config.BoostMultiplier:0.#}" : string.Empty;
             label.text = $"+{BalanceView.FormatMoney(_game.TotalProduction)}/сек{boost}";
+            label.color = active ? new Color(1f, 0.85f, 0.35f) : new Color(0.85f, 1f, 0.85f);
         }
 
         private void OnDestroy()
