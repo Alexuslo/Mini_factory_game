@@ -2,7 +2,8 @@
     "name": "MiniFactory.App",
     "rootNamespace": "",
     "references": [
-        "MiniFactory.Core"
+        "MiniFactory.Core",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

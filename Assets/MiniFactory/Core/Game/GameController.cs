@@ -24,6 +24,22 @@ namespace MiniFactory.Core.Game
 
         public FactoryModel Model => _model;
         public GameConfig Config => _config;
+        public Services.EconomyService Economy => _economy;
+
+        /// <summary>Суммарная производительность открытых машин (без Boost).</summary>
+        public double TotalProduction => _economy.GetTotalProduction(_model.Machines);
+
+        public bool IsBoostActive => _model.IsBoostActive(_clock.NowUnix);
+
+        /// <summary>Остаток активного Boost в секундах; 0 — не активен.</summary>
+        public long BoostRemainingSeconds
+        {
+            get
+            {
+                var remaining = _model.BoostEndUnix - _clock.NowUnix;
+                return remaining > 0 ? remaining : 0;
+            }
+        }
 
         public GameController(
             GameConfig config,

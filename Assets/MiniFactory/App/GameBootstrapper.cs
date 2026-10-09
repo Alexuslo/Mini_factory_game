@@ -19,6 +19,10 @@ namespace MiniFactory.App
     {
         [SerializeField] private GameConfigAsset configAsset;
         [SerializeField] private GameLoop gameLoop;
+        [SerializeField] private View.BalanceView balanceView;
+        [SerializeField] private View.ProductionView productionView;
+        [SerializeField] private View.BoostView boostView;
+        [SerializeField] private View.MachineGridRenderer machineGrid;
 
         private GameController _controller;
 
@@ -46,6 +50,12 @@ namespace MiniFactory.App
         private void Start()
         {
             _controller.Initialize();
+
+            // каждая View подписывается на события модели и шлёт команды контроллеру
+            if (balanceView != null) balanceView.Initialize(_controller.Model);
+            if (productionView != null) productionView.Initialize(_controller);
+            if (boostView != null) boostView.Initialize(_controller);
+            if (machineGrid != null) machineGrid.Initialize(_controller);
         }
     }
 }

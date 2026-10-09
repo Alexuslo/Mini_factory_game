@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eee1ae4de9a146341bcdc3280166a82c, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: MiniFactory.App::MiniFactory.App.Config.GameConfigAsset
+  machines:
+  - id: press
+    displayName: "\u041F\u0440\u0435\u0441\u0441"
+    unlockCost: 0
+    baseProduction: 1
+    upgradeCostBase: 10
+    upgradeCostGrowth: 1.15
+    productionGrowth: 1.1
+  - id: cutter
+    displayName: "\u0420\u0435\u0437\u0430\u043A"
+    unlockCost: 50
+    baseProduction: 5
+    upgradeCostBase: 100
+    upgradeCostGrowth: 1.15
+    productionGrowth: 1.1
+  - id: assembler
+    displayName: "\u0421\u0431\u043E\u0440\u043A\u0430"
+    unlockCost: 500
+    baseProduction: 25
+    upgradeCostBase: 800
+    upgradeCostGrowth: 1.15
+    productionGrowth: 1.1
+  boostEnabled: 1
+  boostDurationSeconds: 300
+  boostMultiplier: 3
+  maxOfflineSeconds: 7200
