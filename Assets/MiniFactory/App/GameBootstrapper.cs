@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using MiniFactory.App.Analytics;
 using MiniFactory.App.Config;
 using MiniFactory.App.Gameplay;
+using MiniFactory.App.Iap;
 using MiniFactory.App.Save;
 using MiniFactory.App.Timing;
+using MiniFactory.App.View;
 using MiniFactory.Core.Game;
 using MiniFactory.Core.Model;
 using MiniFactory.Core.Services;
@@ -19,12 +22,14 @@ namespace MiniFactory.App
     {
         [SerializeField] private GameConfigAsset configAsset;
         [SerializeField] private GameLoop gameLoop;
-        [SerializeField] private View.BalanceView balanceView;
-        [SerializeField] private View.ProductionView productionView;
-        [SerializeField] private View.BoostView boostView;
-        [SerializeField] private View.MachineGridRenderer machineGrid;
+        [SerializeField] private BalanceView balanceView;
+        [SerializeField] private ProductionView productionView;
+        [SerializeField] private BoostView boostView;
+        [SerializeField] private MachineGridRenderer machineGrid;
+        [SerializeField] private PurchaseView[] purchaseViews;
 
         private GameController _controller;
+        private UnityIapService _purchases;
 
         public GameController Controller => _controller;
 
@@ -35,13 +40,14 @@ namespace MiniFactory.App
             var config = new LocalConfigSource(configAsset).GetConfig();
             var save = new JsonSaveService(JsonSaveService.DefaultPath);
             var analytics = new AnalyticsService(new ConsoleAnalyticsProvider());
+            _purchases = new UnityIapService();
 
             // --- слой 2: логика ---
             var model = new FactoryModel(config);
             var economy = new EconomyService(config);
 
             // --- контроллер: собирает всё вместе ---
-            _controller = new GameController(config, model, economy, save, analytics, clock);
+            _controller = new GameController(config, model, economy, save, analytics, clock, _purchases);
 
             // --- View/луп получают зависимости явным вызовом ---
             if (gameLoop != null) gameLoop.Initialize(_controller);
@@ -49,6 +55,12 @@ namespace MiniFactory.App
 
         private void Start()
         {
+            // IAP: продукты из конфига, инициализация асинхронна (Fake Store в редакторе)
+            var productIds = new List<string>();
+            if (_controller.Config.Products != null)
+                foreach (var p in _controller.Config.Products) productIds.Add(p.Id);
+            _purchases.Initialize(productIds);
+
             _controller.Initialize();
 
             // каждая View подписывается на события модели и шлёт команды контроллеру
@@ -56,6 +68,13 @@ namespace MiniFactory.App
             if (productionView != null) productionView.Initialize(_controller);
             if (boostView != null) boostView.Initialize(_controller);
             if (machineGrid != null) machineGrid.Initialize(_controller);
+
+            // магазин: каждая кнопка получает свой продукт из конфига (порядок совпадает)
+            var products = _controller.Config.Products;
+            if (purchaseViews != null && products != null)
+                for (var i = 0; i < purchaseViews.Length && i < products.Length; i++)
+                    if (purchaseViews[i] != null)
+                        purchaseViews[i].Initialize(_controller, products[i].Id);
         }
     }
 }
