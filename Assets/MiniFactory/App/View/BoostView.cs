@@ -13,11 +13,18 @@ namespace MiniFactory.App.View
         [SerializeField] private Button button;
         [SerializeField] private Text label;
 
+        private static readonly Color ActiveColor = new Color(0.25f, 0.75f, 0.35f);
+
         private GameController _game;
+        private Image _background;
+        private Color _idleColor;
 
         public void Initialize(GameController game)
         {
             _game = game;
+            _background = GetComponent<Image>();
+            if (_background != null) _idleColor = _background.color;
+
             if (button != null)
             {
                 button.onClick.RemoveListener(OnClick);
@@ -44,11 +51,13 @@ namespace MiniFactory.App.View
             {
                 SetLabel($"Boost ×{_game.Config.BoostMultiplier:0.#} {FormatTime(remaining)}");
                 if (button != null) button.interactable = false;
+                if (_background != null) _background.color = ActiveColor; // буст активен — подсветка
             }
             else
             {
                 SetLabel($"Boost ×{_game.Config.BoostMultiplier:0.#}");
                 if (button != null) button.interactable = true;
+                if (_background != null) _background.color = _idleColor;
             }
         }
 
