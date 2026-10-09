@@ -34,6 +34,15 @@ MonoBehaviour:
     upgradeCostBase: 800
     upgradeCostGrowth: 1.15
     productionGrowth: 1.1
+  products:
+  - id: coins_pack_small
+    displayName: "\u041C\u043E\u043D\u0435\u0442\u044B \xD71K"
+    coinsReward: 1000
+    boostSeconds: 0
+  - id: boost_pack
+    displayName: "\u0411\u0443\u0441\u0442 \xD710 \u043C\u0438\u043D"
+    coinsReward: 0
+    boostSeconds: 600
   boostEnabled: 1
   boostDurationSeconds: 300
   boostMultiplier: 3
