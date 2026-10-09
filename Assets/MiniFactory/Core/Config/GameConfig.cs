@@ -24,11 +24,22 @@ namespace MiniFactory.Core.Config
         /// <summary>Максимальная продолжительность offline production в секундах (ТЗ п.3).</summary>
         public int MaxOfflineSeconds = 7200;
 
+        /// <summary>Продукты магазина (ТЗ п.4).</summary>
+        public ProductConfig[] Products;
+
         public MachineConfig GetMachine(string id)
         {
             if (Machines == null) return null;
             for (var i = 0; i < Machines.Length; i++)
                 if (Machines[i].Id == id) return Machines[i];
+            return null;
+        }
+
+        public ProductConfig GetProduct(string id)
+        {
+            if (Products == null) return null;
+            for (var i = 0; i < Products.Length; i++)
+                if (Products[i].Id == id) return Products[i];
             return null;
         }
     }

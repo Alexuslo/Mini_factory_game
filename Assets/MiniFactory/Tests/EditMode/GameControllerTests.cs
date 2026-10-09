@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MiniFactory.Core.Config;
@@ -45,11 +46,30 @@ namespace MiniFactory.Tests.EditMode
                 => Events.First(e => e.name == name);
         }
 
+        private sealed class FakePurchases : IGamePurchaseService
+        {
+            public bool IsAvailable { get; set; } = true;
+            public readonly List<string> Bought = new List<string>();
+
+            public event Action<PurchaseOutcome> OnPurchaseCompleted;
+
+            public void Initialize(IEnumerable<string> consumableProductIds) { }
+
+            public void Buy(string productId) => Bought.Add(productId);
+
+            public void Succeed(string productId)
+                => OnPurchaseCompleted?.Invoke(new PurchaseOutcome(true, productId, null));
+
+            public void Fail(string productId, string error)
+                => OnPurchaseCompleted?.Invoke(new PurchaseOutcome(false, productId, error));
+        }
+
         private sealed class Harness
         {
             public readonly FakeClock Clock = new FakeClock();
             public readonly FakeSave Save = new FakeSave();
             public readonly FakeAnalytics Analytics = new FakeAnalytics();
+            public readonly FakePurchases Purchases = new FakePurchases();
             public readonly GameConfig Config;
             public readonly FactoryModel Model;
             public readonly EconomyService Economy;
@@ -70,11 +90,16 @@ namespace MiniFactory.Tests.EditMode
                         new MachineConfig { Id = "m1", UnlockCost = 0, BaseProduction = 10, UpgradeCostBase = 100 },
                         new MachineConfig { Id = "m2", UnlockCost = 50, BaseProduction = 50, UpgradeCostBase = 500 },
                         new MachineConfig { Id = "m3", UnlockCost = 500, BaseProduction = 200, UpgradeCostBase = 2000 }
+                    },
+                    Products = new[]
+                    {
+                        new ProductConfig { Id = "coins_pack_small", CoinsReward = 1000 },
+                        new ProductConfig { Id = "boost_pack", CoinsReward = 0, BoostSeconds = 600 }
                     }
                 };
                 Model = new FactoryModel(Config);
                 Economy = new EconomyService(Config);
-                Game = new GameController(Config, Model, Economy, Save, Analytics, Clock);
+                Game = new GameController(Config, Model, Economy, Save, Analytics, Clock, Purchases);
             }
         }
 
@@ -227,6 +252,61 @@ namespace MiniFactory.Tests.EditMode
             h.Game.StartBoost();    // повторный старт — окно заново от текущего момента
 
             Assert.AreEqual(h.Config.BoostDurationSeconds, h.Model.BoostEndUnix - h.Clock.NowUnix);
+        }
+
+        [Test]
+        public void Purchase_CoinsPack_Success_AddsRewardAndLogs()
+        {
+            var h = new Harness();
+
+            h.Game.BuyProduct("coins_pack_small");
+            h.Purchases.Succeed("coins_pack_small");
+
+            Assert.AreEqual(1000, h.Model.Balance, 0.0001);
+            Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.PurchaseSucceeded));
+            Assert.IsTrue(h.Save.HasProgress()); // награда сразу в сохранении
+        }
+
+        [Test]
+        public void Purchase_BoostPack_Success_ActivatesBoostForProductDuration()
+        {
+            var h = new Harness();
+
+            h.Game.BuyProduct("boost_pack");
+            h.Purchases.Succeed("boost_pack");
+
+            Assert.IsTrue(h.Model.IsBoostActive(h.Clock.NowUnix));
+            Assert.AreEqual(600, h.Model.BoostEndUnix - h.Clock.NowUnix);
+            Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.BoostStarted));
+            Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.PurchaseSucceeded));
+            Assert.AreEqual(0, h.Model.Balance, 0.0001); // буст-пак не даёт монет
+        }
+
+        [Test]
+        public void Purchase_Failed_LogsFailedEvent_NoReward()
+        {
+            var h = new Harness();
+
+            h.Game.BuyProduct("coins_pack_small");
+            h.Purchases.Fail("coins_pack_small", "user_cancelled");
+
+            Assert.AreEqual(0, h.Model.Balance, 0.0001);
+            Assert.AreEqual(0, h.Analytics.Count(AnalyticsEvents.PurchaseSucceeded));
+            Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.PurchaseFailed));
+        }
+
+        [Test]
+        public void BuyProduct_WhenIapUnavailable_LogsFailedAndDoesNotCrash()
+        {
+            var h = new Harness();
+            h.Purchases.IsAvailable = false;
+
+            h.Game.BuyProduct("coins_pack_small");
+
+            Assert.IsEmpty(h.Purchases.Bought); // в магазин не пошли
+            Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.PurchaseFailed));
+            var (_, pars) = h.Analytics.First(AnalyticsEvents.PurchaseFailed);
+            Assert.AreEqual("iap_unavailable", pars["error"]);
         }
 
         private static MachineState Model_GetMachine(Harness h, string id) => h.Model.GetMachine(id);

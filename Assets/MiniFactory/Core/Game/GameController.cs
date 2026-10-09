@@ -21,10 +21,14 @@ namespace MiniFactory.Core.Game
         private readonly ISaveService _save;
         private readonly IAnalytics _analytics;
         private readonly IClock _clock;
+        private readonly IGamePurchaseService _purchases;
 
         public FactoryModel Model => _model;
         public GameConfig Config => _config;
         public Services.EconomyService Economy => _economy;
+
+        /// <summary>false — покупки недоступны (IAP не инициализировался).</summary>
+        public bool PurchasesAvailable => _purchases != null && _purchases.IsAvailable;
 
         /// <summary>Суммарная производительность открытых машин (без Boost).</summary>
         public double TotalProduction => _economy.GetTotalProduction(_model.Machines);
@@ -47,7 +51,8 @@ namespace MiniFactory.Core.Game
             Services.EconomyService economy,
             ISaveService save,
             IAnalytics analytics,
-            IClock clock)
+            IClock clock,
+            IGamePurchaseService purchases)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _model = model ?? throw new ArgumentNullException(nameof(model));
@@ -55,6 +60,54 @@ namespace MiniFactory.Core.Game
             _save = save ?? throw new ArgumentNullException(nameof(save));
             _analytics = analytics ?? throw new ArgumentNullException(nameof(analytics));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+            _purchases = purchases;
+
+            if (_purchases != null)
+                _purchases.OnPurchaseCompleted += HandlePurchaseCompleted;
+        }
+
+        /// <summary>Покупка продукта из магазина. Недоступность IAP — не краш, а событие.</summary>
+        public void BuyProduct(string productId)
+        {
+            if (_purchases == null || !_purchases.IsAvailable)
+            {
+                _analytics.Log(AnalyticsEvents.PurchaseFailed, new Dictionary<string, object>
+                {
+                    ["product_id"] = productId,
+                    ["error"] = "iap_unavailable"
+                });
+                return;
+            }
+            _purchases.Buy(productId);
+        }
+
+        private void HandlePurchaseCompleted(PurchaseOutcome outcome)
+        {
+            if (outcome.Success)
+            {
+                var product = _config.GetProduct(outcome.ProductId);
+                var reward = product?.CoinsReward ?? 0;
+                var boostSeconds = product?.BoostSeconds ?? 0;
+
+                if (reward > 0) _model.AddBalance(reward);
+                if (boostSeconds > 0) ApplyBoost(boostSeconds);
+                SaveProgress();
+
+                _analytics.Log(AnalyticsEvents.PurchaseSucceeded, new Dictionary<string, object>
+                {
+                    ["product_id"] = outcome.ProductId,
+                    ["reward"] = reward,
+                    ["boost_seconds"] = boostSeconds
+                });
+            }
+            else
+            {
+                _analytics.Log(AnalyticsEvents.PurchaseFailed, new Dictionary<string, object>
+                {
+                    ["product_id"] = outcome.ProductId,
+                    ["error"] = outcome.Error ?? "unknown"
+                });
+            }
         }
 
         /// <summary>Старт сессии: загрузка прогресса, применение offline-дохода.</summary>
@@ -152,15 +205,21 @@ namespace MiniFactory.Core.Game
         public bool StartBoost()
         {
             if (!_config.BoostEnabled) return false;
+            return ApplyBoost(_config.BoostDurationSeconds);
+        }
+
+        private bool ApplyBoost(int durationSeconds)
+        {
+            if (!_config.BoostEnabled || durationSeconds <= 0) return false;
 
             var now = _clock.NowUnix;
-            var end = now + _config.BoostDurationSeconds;
+            var end = now + durationSeconds;
             _model.SetBoost(now, end);
             SaveProgress();
 
             _analytics.Log(AnalyticsEvents.BoostStarted, new Dictionary<string, object>
             {
-                ["duration_seconds"] = _config.BoostDurationSeconds,
+                ["duration_seconds"] = durationSeconds,
                 ["multiplier"] = _config.BoostMultiplier
             });
             return true;

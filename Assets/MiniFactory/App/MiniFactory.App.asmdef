@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "MiniFactory.Core",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.Purchasing"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -28,8 +28,24 @@ namespace MiniFactory.App.Config
             public float productionGrowth = 1.1f;
         }
 
+        [Serializable]
+        public sealed class ProductEntry
+        {
+            public string id;
+            public string displayName;
+
+            [Tooltip("Награда монетами; 0 — смотри boostSeconds")]
+            public long coinsReward = 1000;
+
+            [Tooltip("Если > 0 — покупка активирует Boost на N секунд вместо монет")]
+            public int boostSeconds;
+        }
+
         [Header("Machines")]
         public MachineEntry[] machines;
+
+        [Header("IAP")]
+        public ProductEntry[] products;
 
         [Header("Boost")]
         public bool boostEnabled = true;
@@ -45,6 +61,7 @@ namespace MiniFactory.App.Config
             var result = new GameConfig
             {
                 Machines = new MachineConfig[machines?.Length ?? 0],
+                Products = new ProductConfig[products?.Length ?? 0],
                 BoostEnabled = boostEnabled,
                 BoostDurationSeconds = boostDurationSeconds,
                 BoostMultiplier = boostMultiplier,
@@ -63,6 +80,18 @@ namespace MiniFactory.App.Config
                     UpgradeCostBase = m.upgradeCostBase,
                     UpgradeCostGrowth = m.upgradeCostGrowth,
                     ProductionGrowth = m.productionGrowth
+                };
+            }
+
+            for (var i = 0; i < result.Products.Length; i++)
+            {
+                var p = products[i];
+                result.Products[i] = new ProductConfig
+                {
+                    Id = p.id,
+                    DisplayName = p.displayName,
+                    CoinsReward = p.coinsReward,
+                    BoostSeconds = p.boostSeconds
                 };
             }
 
