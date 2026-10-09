@@ -190,6 +190,45 @@ namespace MiniFactory.Tests.EditMode
             Assert.AreEqual(300, h.Model.Balance, 0.0001);
         }
 
+        [Test]
+        public void Tick_BoostExpires_LogsBoostFinishedAndClearsBoost()
+        {
+            var h = new Harness();
+            h.Game.StartBoost();
+
+            h.Clock.NowUnix += h.Config.BoostDurationSeconds + 1; // буст истёк
+            h.Game.Tick(1);
+
+            Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.BoostFinished));
+            Assert.IsFalse(h.Model.IsBoostActive(h.Clock.NowUnix));
+            Assert.AreEqual(0, h.Model.BoostEndUnix); // окно сброшено, не залипло
+        }
+
+        [Test]
+        public void StartBoost_WhenBoostDisabledInConfig_FailsWithoutEvent()
+        {
+            var h = new Harness();
+            h.Config.BoostEnabled = false;
+
+            var ok = h.Game.StartBoost();
+
+            Assert.IsFalse(ok);
+            Assert.AreEqual(0, h.Analytics.Count(AnalyticsEvents.BoostStarted));
+            Assert.IsFalse(h.Model.IsBoostActive(h.Clock.NowUnix));
+        }
+
+        [Test]
+        public void StartBoost_WhileActive_ResetsWindowFromNow()
+        {
+            var h = new Harness();
+            h.Game.StartBoost();
+
+            h.Clock.NowUnix += 100; // прошло 100 из 300 сек
+            h.Game.StartBoost();    // повторный старт — окно заново от текущего момента
+
+            Assert.AreEqual(h.Config.BoostDurationSeconds, h.Model.BoostEndUnix - h.Clock.NowUnix);
+        }
+
         private static MachineState Model_GetMachine(Harness h, string id) => h.Model.GetMachine(id);
     }
 }
