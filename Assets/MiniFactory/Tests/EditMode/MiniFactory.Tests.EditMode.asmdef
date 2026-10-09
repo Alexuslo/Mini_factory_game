@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "MiniFactory.Core",
+        "MiniFactory.App",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
