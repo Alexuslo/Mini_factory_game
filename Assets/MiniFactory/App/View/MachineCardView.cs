@@ -24,6 +24,13 @@ namespace MiniFactory.App.View
         private GameController _game;
         private string _machineId;
 
+        /// <summary>Rect кнопки действия — на неё указывает стрелка туториала.</summary>
+        public RectTransform ActionButtonRect =>
+            actionButton != null ? actionButton.GetComponent<RectTransform>() : null;
+
+        /// <summary>Кнопка действия — её interactable определяет, пора ли показывать стрелку.</summary>
+        public Button ActionButton => actionButton;
+
         public void Initialize(GameController game, string machineId)
         {
             _game = game;

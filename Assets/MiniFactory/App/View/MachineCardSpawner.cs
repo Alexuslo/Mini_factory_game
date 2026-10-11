@@ -30,6 +30,13 @@ namespace MiniFactory.App.View
             }
         }
 
+        /// <summary>Карточка машины по id (null — ещё не создана).</summary>
+        public MachineCardView GetCard(string machineId)
+        {
+            var t = transform.Find("Card_" + machineId);
+            return t != null ? t.GetComponent<MachineCardView>() : null;
+        }
+
         /// <summary>Runtime-применение UI-конфига к раскладке и уже созданным карточкам.</summary>
         public void ApplyUi(GameConfigAsset.UiEntry ui)
         {

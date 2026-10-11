@@ -28,6 +28,7 @@ namespace MiniFactory.Core.Model
         public event Action<double> OnBalanceChanged;
         public event Action<MachineState> OnMachineChanged;
         public event Action<long> OnBoostChanged;
+        public event Action<int> OnTutorialStepChanged;
 
         public FactoryModel(GameConfig config)
         {
@@ -96,6 +97,14 @@ namespace MiniFactory.Core.Model
         }
 
         public bool IsBoostActive(long nowUnix) => nowUnix < BoostEndUnix;
+
+        /// <summary>Шаг мини-туториала; продвигается только вперёд, оповещает View.</summary>
+        public void SetTutorialStep(int step)
+        {
+            if (TutorialStep == step) return;
+            TutorialStep = step;
+            OnTutorialStepChanged?.Invoke(step);
+        }
 
         /// <summary>Восстановление состояния из сохранения (сырые данные уже прочитаны).</summary>
         public void Restore(PlayerProgress progress)
