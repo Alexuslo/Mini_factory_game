@@ -43,9 +43,32 @@ namespace MiniFactory.App
         {
             // --- слой 1: инфраструктура ---
             var clock = new SystemClock();
-            var config = new LocalConfigSource(configAsset).GetConfig();
+            var localSource = new LocalConfigSource(configAsset);
+
+            // Remote Config (доп. задание): decorator поверх локального конфига.
+            // Firebase — за #if MINIFACTORY_FIREBASE; без него — локальный fallback из StreamingAssets.
+            Core.Contracts.IRemoteConfigService remoteConfig =
+#if MINIFACTORY_FIREBASE
+                new FirebaseRemoteConfigService();
+#else
+                new LocalRemoteConfigService();
+#endif
+            remoteConfig.Fetch();
+            var config = new Core.Services.RemoteConfigConfigSource(localSource, remoteConfig).GetConfig();
+
             var save = new JsonSaveService(JsonSaveService.DefaultPath);
-            var analytics = new AnalyticsService(new ConsoleAnalyticsProvider());
+            // analytics: Console всегда; AppMetrica — когда SDK установлен (доп. задание)
+            var analyticsProviders = new List<Core.Contracts.IAnalyticsProvider>
+            {
+                new ConsoleAnalyticsProvider()
+            };
+#if MINIFACTORY_APPMETRICA
+            // API key хранится в AppMetricaSettings.asset (не в коде)
+            var appmetricaKey = Resources.Load<AppMetricaSettings>("AppMetricaSettings");
+            if (appmetricaKey != null && !string.IsNullOrEmpty(appmetricaKey.ApiKey))
+                analyticsProviders.Add(new AppMetricaAnalyticsProvider(appmetricaKey.ApiKey));
+#endif
+            var analytics = new AnalyticsService(analyticsProviders.ToArray());
             _purchases = new UnityIapService();
 
             // --- слой 2: логика ---
