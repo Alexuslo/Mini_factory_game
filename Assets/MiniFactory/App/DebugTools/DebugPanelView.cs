@@ -22,15 +22,22 @@ namespace MiniFactory.App.DebugTools
         private int _taps;
         private float _lastTapTime;
 
-        public void Initialize(GameController game, RectTransform tapTarget)
+        /// <summary>
+        /// Вешает панель на tapTarget: компонент создаётся там же,
+        /// чтобы OnPointerClick и _panel были на одном экземпляре.
+        /// </summary>
+        public static DebugPanelView Attach(GameController game, RectTransform tapTarget)
+        {
+            if (tapTarget == null) return null;
+            var view = tapTarget.GetComponent<DebugPanelView>();
+            if (view == null) view = tapTarget.gameObject.AddComponent<DebugPanelView>();
+            view.Initialize(game);
+            return view;
+        }
+
+        private void Initialize(GameController game)
         {
             _game = game;
-            if (tapTarget != null)
-            {
-                var catcher = tapTarget.GetComponent<DebugPanelView>();
-                if (catcher == null) catcher = tapTarget.gameObject.AddComponent<DebugPanelView>();
-                catcher._game = game;
-            }
             BuildPanel();
             SetPanelVisible(false);
         }

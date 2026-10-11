@@ -121,9 +121,8 @@ namespace MiniFactory.App
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // debug-панель: 5 тапов на текст баланса (только редактор / dev build)
-            var debugPanel = FindObjectOfType<MiniFactory.App.DebugTools.DebugPanelView>();
-            if (debugPanel == null) debugPanel = gameObject.AddComponent<MiniFactory.App.DebugTools.DebugPanelView>();
-            debugPanel.Initialize(_controller, balanceView != null ? balanceView.LabelRect : null);
+            MiniFactory.App.DebugTools.DebugPanelView.Attach(
+                _controller, balanceView != null ? balanceView.LabelRect : null);
 #endif
         }
     }
