@@ -22,11 +22,12 @@ namespace MiniFactory.App.DebugTools
         private RectTransform _panel;
         private int _taps;
         private float _lastTapTime;
+        private string _currentVariant = "A";
 
         /// <summary>
         /// Создаёт невидимую hot-zone в правом верхнем углу canvas и вешает на неё панель.
         /// </summary>
-        public static DebugPanelView Attach(GameController game)
+        public static DebugPanelView Attach(GameController game, string experimentVariant = "A")
         {
             var canvas = FindObjectOfType<Canvas>();
             if (canvas == null) return null;
@@ -44,13 +45,14 @@ namespace MiniFactory.App.DebugTools
             img.color = new Color(0, 0, 0, 0.01f); // почти прозрачная, но ловит клики
 
             var view = hotZone.AddComponent<DebugPanelView>();
-            view.Initialize(game);
+            view.Initialize(game, experimentVariant);
             return view;
         }
 
-        private void Initialize(GameController game)
+        private void Initialize(GameController game, string experimentVariant)
         {
             _game = game;
+            _currentVariant = experimentVariant ?? "A";
             BuildPanel();
             SetPanelVisible(false);
         }
@@ -94,6 +96,8 @@ namespace MiniFactory.App.DebugTools
             layout.childForceExpandWidth = true;
 
             AddLabel(_panel, "DEBUG", 80, TextAnchor.MiddleCenter);
+            AddLabel(_panel, $"A/B: {_currentVariant}", 48, TextAnchor.MiddleCenter);
+            AddButton(_panel, "Переключить A/B", ToggleVariant);
             AddButton(_panel, "+1000 монет", () => _game.Model.AddBalance(1000));
             AddButton(_panel, "+10K монет", () => _game.Model.AddBalance(10_000));
             AddButton(_panel, "Открыть первую закрытую", UnlockFirstLocked);
@@ -101,6 +105,19 @@ namespace MiniFactory.App.DebugTools
             AddButton(_panel, "Сбросить туториал", () => _game.Model.SetTutorialStep(0));
             AddButton(_panel, "Стереть сейв", () => _game.RestartProgress());
             AddButton(_panel, "Закрыть", () => SetPanelVisible(false));
+        }
+
+        private void ToggleVariant()
+        {
+            _currentVariant = _currentVariant == "A" ? "B" : "A";
+
+            // сохраняем в сейв — применится при следующем запуске
+            var save = new MiniFactory.App.Save.JsonSaveService(MiniFactory.App.Save.JsonSaveService.DefaultPath);
+            var progress = save.HasProgress() ? save.Load() : new Core.Save.PlayerProgress();
+            Core.Config.ExperimentSelector.SetVariant(progress, _currentVariant);
+            save.Save(progress);
+
+            Debug.Log($"[Debug] A/B variant → {_currentVariant} (применится при перезапуске)");
         }
 
         private void UnlockFirstLocked()

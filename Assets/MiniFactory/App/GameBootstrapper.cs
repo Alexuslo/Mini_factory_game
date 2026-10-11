@@ -32,6 +32,7 @@ namespace MiniFactory.App
 
         private GameController _controller;
         private UnityIapService _purchases;
+        private string _experimentVariant = "A";
 
         /// <summary>Id туториала → директор; композер выдаёт по зашитому у потребителя Id.</summary>
         private readonly Dictionary<string, TutorialDirector> _tutorials
@@ -44,8 +45,21 @@ namespace MiniFactory.App
             // --- слой 1: инфраструктура ---
             var clock = new SystemClock();
             var localSource = new LocalConfigSource(configAsset);
+            var save = new JsonSaveService(JsonSaveService.DefaultPath);
 
-            // Remote Config (доп. задание): decorator поверх локального конфига.
+            // A/B: вариант из сейва (при первом запуске — случайно, запоминается).
+            // A = контроль (базовый конфиг), B = эксперимент (оверрайды из GameConfigAsset).
+            var existingProgress = save.HasProgress() ? save.Load() : null;
+            var variant = Core.Config.ExperimentSelector.AssignInitial(existingProgress
+                ?? new Core.Save.PlayerProgress());
+            _experimentVariant = variant;
+            var experiment = Core.Config.ExperimentSelector.ResolveExperiment(
+                variant, configAsset.ToExperimentConfig());
+
+            // ExperimentConfigSource: decorator поверх локального; A → прозрачный прокси
+            var baseSource = new Core.Config.ExperimentConfigSource(localSource, experiment);
+
+            // Remote Config (доп. задание): decorator поверх experiment.
             // Firebase — за #if MINIFACTORY_FIREBASE; без него — локальный fallback из StreamingAssets.
             Core.Contracts.IRemoteConfigService remoteConfig =
 #if MINIFACTORY_FIREBASE
@@ -54,9 +68,11 @@ namespace MiniFactory.App
                 new LocalRemoteConfigService();
 #endif
             remoteConfig.Fetch();
-            var config = new Core.Services.RemoteConfigConfigSource(localSource, remoteConfig).GetConfig();
+            var config = new Core.Services.RemoteConfigConfigSource(baseSource, remoteConfig).GetConfig();
 
-            var save = new JsonSaveService(JsonSaveService.DefaultPath);
+            // сохраняем назначенный вариант (при первом запуске)
+            if (existingProgress == null)
+                save.Save(new Core.Save.PlayerProgress { experimentVariant = variant });
             // analytics: Console всегда; AppMetrica — когда SDK установлен (доп. задание)
             var analyticsProviders = new List<Core.Contracts.IAnalyticsProvider>
             {
@@ -144,7 +160,7 @@ namespace MiniFactory.App
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // debug-панель: 5 тапов в правом верхнем углу (только редактор / dev build)
-            MiniFactory.App.DebugTools.DebugPanelView.Attach(_controller);
+            MiniFactory.App.DebugTools.DebugPanelView.Attach(_controller, _experimentVariant);
 #endif
         }
     }
