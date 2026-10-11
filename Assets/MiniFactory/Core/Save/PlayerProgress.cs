@@ -24,5 +24,8 @@ namespace MiniFactory.Core.Save
         public long boostEndUnix;
         public long boostStartedUnix;
         public int tutorialStep;
+
+        /// <summary>A/B вариант: "A" (контроль) или "B" (эксперимент). Пусто — A.</summary>
+        public string experimentVariant;
     }
 }

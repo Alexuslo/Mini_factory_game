@@ -214,6 +214,24 @@ namespace MiniFactory.App.Config
         [Tooltip("Шрифты и размеры интерфейса (canvas 1080x1920). Применяются при Build Scene")]
         public UiEntry ui = new UiEntry();
 
+        [Header("Experiment (A/B)")]
+        [Tooltip("Множитель базового дохода варианта B; null — без изменений (вариант A = контроль)")]
+        public float? experimentProductionMultiplier;
+
+        [Tooltip("Множитель стоимости апгрейда варианта B; null — без изменений")]
+        public float? experimentUpgradeCostMultiplier;
+
+        [Tooltip("Множитель стоимости открытия варианта B; null — без изменений")]
+        public float? experimentUnlockCostMultiplier;
+
+        /// <summary>Оверрайды для варианта B; null-значения означают «без изменений».</summary>
+        public Core.Config.ExperimentConfig ToExperimentConfig() => new Core.Config.ExperimentConfig
+        {
+            ProductionMultiplier = experimentProductionMultiplier,
+            UpgradeCostMultiplier = experimentUpgradeCostMultiplier,
+            UnlockCostMultiplier = experimentUnlockCostMultiplier
+        };
+
         public GameConfig ToGameConfig()
         {
             var result = new GameConfig
