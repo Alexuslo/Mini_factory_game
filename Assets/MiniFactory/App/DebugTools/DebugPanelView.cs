@@ -9,13 +9,14 @@ namespace MiniFactory.App.DebugTools
 {
     /// <summary>
     /// Debug-панель (только редактор / development build): откроется по 5 тапам
-    /// на текст баланса. Даёт QA/ревьюеру быстрые действия без грейнда.
+    /// на невидимую зону в правом верхнем углу. Даёт QA/ревьюеру быстрые действия.
     /// UI создаётся в рантайме — сцена не пересобирается.
     /// </summary>
     public sealed class DebugPanelView : MonoBehaviour, IPointerClickHandler
     {
         private const int TapCountToOpen = 5;
         private const float TapWindowSeconds = 1.5f;
+        private const float HotZoneSize = 120f;
 
         private GameController _game;
         private RectTransform _panel;
@@ -23,14 +24,26 @@ namespace MiniFactory.App.DebugTools
         private float _lastTapTime;
 
         /// <summary>
-        /// Вешает панель на tapTarget: компонент создаётся там же,
-        /// чтобы OnPointerClick и _panel были на одном экземпляре.
+        /// Создаёт невидимую hot-zone в правом верхнем углу canvas и вешает на неё панель.
         /// </summary>
-        public static DebugPanelView Attach(GameController game, RectTransform tapTarget)
+        public static DebugPanelView Attach(GameController game)
         {
-            if (tapTarget == null) return null;
-            var view = tapTarget.GetComponent<DebugPanelView>();
-            if (view == null) view = tapTarget.gameObject.AddComponent<DebugPanelView>();
+            var canvas = FindObjectOfType<Canvas>();
+            if (canvas == null) return null;
+
+            var hotZone = new GameObject("DebugHotZone", typeof(RectTransform), typeof(Image));
+            hotZone.transform.SetParent(canvas.transform, false);
+            var rt = (RectTransform)hotZone.transform;
+            rt.anchorMin = new Vector2(1, 1);
+            rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(1, 1);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(HotZoneSize, HotZoneSize);
+
+            var img = hotZone.GetComponent<Image>();
+            img.color = new Color(0, 0, 0, 0.01f); // почти прозрачная, но ловит клики
+
+            var view = hotZone.AddComponent<DebugPanelView>();
             view.Initialize(game);
             return view;
         }

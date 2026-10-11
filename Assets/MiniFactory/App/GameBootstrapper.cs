@@ -120,9 +120,8 @@ namespace MiniFactory.App
             if (gameLoop != null) gameLoop.Paused = false;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            // debug-панель: 5 тапов на текст баланса (только редактор / dev build)
-            MiniFactory.App.DebugTools.DebugPanelView.Attach(
-                _controller, balanceView != null ? balanceView.LabelRect : null);
+            // debug-панель: 5 тапов в правом верхнем углу (только редактор / dev build)
+            MiniFactory.App.DebugTools.DebugPanelView.Attach(_controller);
 #endif
         }
     }
