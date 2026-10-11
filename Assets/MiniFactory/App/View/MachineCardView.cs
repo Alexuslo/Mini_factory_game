@@ -1,3 +1,4 @@
+using MiniFactory.App.Config;
 using MiniFactory.Core.Game;
 using MiniFactory.Core.Model;
 using UnityEngine;
@@ -53,6 +54,33 @@ namespace MiniFactory.App.View
 
             if (state.IsUnlocked) _game.UpgradeMachine(_machineId);
             else _game.UnlockMachine(_machineId);
+        }
+
+        /// <summary>Runtime-применение UI-конфига (без пересборки сцены).</summary>
+        public void ApplyUi(GameConfigAsset.UiEntry ui)
+        {
+            lockedColor = ui.cardLockedColor;
+            unlockedColor = ui.cardUnlockedColor;
+            if (nameText != null) nameText.fontSize = ui.fontCardName;
+            if (infoText != null)
+            {
+                infoText.fontSize = ui.fontCardInfo;
+                infoText.color = ui.cardInfoColor;
+            }
+            if (costText != null)
+            {
+                costText.fontSize = ui.fontCardCost;
+                costText.color = ui.cardCostColor;
+            }
+            if (buttonLabel != null) buttonLabel.fontSize = ui.fontCardButton;
+            if (actionButton != null)
+            {
+                var img = actionButton.GetComponent<Image>();
+                if (img != null) img.color = ui.cardButtonColor;
+                var rt = actionButton.GetComponent<RectTransform>();
+                rt.anchoredPosition = new Vector2(-ui.cardButtonMargin, rt.anchoredPosition.y);
+            }
+            if (_game != null) Refresh(); // цвета locked/unlocked уже новые
         }
 
         private void Refresh()

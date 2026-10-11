@@ -11,6 +11,14 @@ namespace MiniFactory.App.Config
     [CreateAssetMenu(menuName = "Mini Factory/Game Config", fileName = "GameConfig")]
     public sealed class GameConfigAsset : ScriptableObject
     {
+        /// <summary>Всплывает при правке в инспекторе (для live-применения UI в Play).</summary>
+        public event Action UiChanged;
+
+        private void OnValidate()
+        {
+            UiChanged?.Invoke();
+        }
+
         [Serializable]
         public sealed class MachineEntry
         {
