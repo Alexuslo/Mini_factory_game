@@ -50,6 +50,19 @@ namespace MiniFactory.App.Config
         }
 
         [Serializable]
+        public sealed class TutorialStepEntry
+        {
+            [Tooltip("UpgradeAny / UnlockAny / UpgradeMachine / UnlockMachine")]
+            public string trigger = "UpgradeAny";
+
+            [Tooltip("Для *Machine-триггеров; пусто — любая машина")]
+            public string machineId = "";
+
+            [Tooltip("Куда указывает стрелка: first / firstLocked / id машины")]
+            public string targetMachine = "firstLocked";
+        }
+
+        [Serializable]
         public sealed class UiEntry
         {
             [Header("Camera")]
@@ -160,6 +173,15 @@ namespace MiniFactory.App.Config
 
             public Color titleButtonColor = new Color(0.2f, 0.45f, 0.32f);
             public Color titleConfirmColor = new Color(0.65f, 0.25f, 0.2f);
+
+            [Header("Tutorial")]
+            [Tooltip("Шрифт-стрелка «▼» туториала, px")]
+            public int tutorialArrowSize = 72;
+
+            [Tooltip("Смещение центра стрелки от верха кнопки, px (стрелка висит над кнопкой)")]
+            public int tutorialArrowOffsetY = 90;
+
+            public Color tutorialArrowColor = new Color(1f, 0.85f, 0.2f);
         }
 
         [Header("Machines")]
@@ -177,6 +199,13 @@ namespace MiniFactory.App.Config
         [Tooltip("Максимальное время offline production, сек")]
         public int maxOfflineSeconds = 7200;
 
+        [Header("Tutorial")]
+        [Tooltip("Id туториала — по нему композер выдаёт TutorialDirector потребителю")]
+        public string tutorialId = "main";
+
+        [Tooltip("Шаги мини-туториала; пусто — выключен. Порядок = порядок продвижения.")]
+        public TutorialStepEntry[] tutorialSteps = new TutorialStepEntry[0];
+
         [Header("UI")]
         [Tooltip("Шрифты и размеры интерфейса (canvas 1080x1920). Применяются при Build Scene")]
         public UiEntry ui = new UiEntry();
@@ -187,6 +216,8 @@ namespace MiniFactory.App.Config
             {
                 Machines = new MachineConfig[machines?.Length ?? 0],
                 Products = new ProductConfig[products?.Length ?? 0],
+                TutorialId = string.IsNullOrEmpty(tutorialId) ? "main" : tutorialId,
+                Tutorial = new TutorialStep[tutorialSteps?.Length ?? 0],
                 BoostEnabled = boostEnabled,
                 BoostDurationSeconds = boostDurationSeconds,
                 BoostMultiplier = boostMultiplier,
@@ -220,7 +251,25 @@ namespace MiniFactory.App.Config
                 };
             }
 
+            for (var i = 0; i < result.Tutorial.Length; i++)
+            {
+                var t = tutorialSteps[i];
+                result.Tutorial[i] = new TutorialStep
+                {
+                    Trigger = ParseTrigger(t.trigger),
+                    MachineId = t.machineId,
+                    TargetMachine = t.targetMachine
+                };
+            }
+
             return result;
+        }
+
+        private static TutorialTrigger ParseTrigger(string value)
+        {
+            return Enum.TryParse<TutorialTrigger>(value, true, out var parsed)
+                ? parsed
+                : TutorialTrigger.UpgradeAny;
         }
     }
 }

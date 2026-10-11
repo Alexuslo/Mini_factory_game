@@ -39,6 +39,10 @@ namespace MiniFactory.Core.Game
 
         public bool IsBoostActive => _model.IsBoostActive(_clock.NowUnix);
 
+        /// <summary>События успешных действий — на них подписан TutorialDirector (composition root).</summary>
+        public event Action<string> MachineUpgraded;
+        public event Action<string> MachineUnlocked;
+
         /// <summary>Остаток активного Boost в секундах; 0 — не активен.</summary>
         public long BoostRemainingSeconds
         {
@@ -196,6 +200,7 @@ namespace MiniFactory.Core.Game
             if (!_model.TrySpend(config.UnlockCost)) return false;
 
             _model.UnlockMachine(id);
+            MachineUnlocked?.Invoke(id);
             SaveProgress();
 
             _analytics.Log(AnalyticsEvents.MachineUnlocked, new Dictionary<string, object>
@@ -217,6 +222,7 @@ namespace MiniFactory.Core.Game
             if (!_model.TrySpend(cost)) return false;
 
             _model.SetLevel(id, state.Level + 1);
+            MachineUpgraded?.Invoke(id);
             SaveProgress();
 
             _analytics.Log(AnalyticsEvents.MachineUpgraded, new Dictionary<string, object>

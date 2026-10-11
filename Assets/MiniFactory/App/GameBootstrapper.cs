@@ -28,9 +28,14 @@ namespace MiniFactory.App
         [SerializeField] private MachineCardSpawner cardSpawner;
         [SerializeField] private PurchaseView[] purchaseViews;
         [SerializeField] private TitleScreenView titleScreen;
+        [SerializeField] private TutorialOverlay tutorialOverlay;
 
         private GameController _controller;
         private UnityIapService _purchases;
+
+        /// <summary>Id туториала → директор; композер выдаёт по зашитому у потребителя Id.</summary>
+        private readonly Dictionary<string, TutorialDirector> _tutorials
+            = new Dictionary<string, TutorialDirector>();
 
         public GameController Controller => _controller;
 
@@ -50,8 +55,21 @@ namespace MiniFactory.App
             // --- контроллер: собирает всё вместе ---
             _controller = new GameController(config, model, economy, save, analytics, clock, _purchases);
 
+            // --- туториал: data-driven шаги, регистрация по Id в словаре композера ---
+            var tutorial = new TutorialDirector(model, config);
+            tutorial.Bind(_controller);
+            _tutorials[tutorial.Id] = tutorial;
+
             // --- View/луп получают зависимости явным вызовом ---
             if (gameLoop != null) gameLoop.Initialize(_controller);
+        }
+
+        /// <summary>Композер выдаёт TutorialDirector по Id, зашитому у потребителя.</summary>
+        public TutorialDirector GetTutorial(string tutorialId)
+        {
+            return !string.IsNullOrEmpty(tutorialId) && _tutorials.TryGetValue(tutorialId, out var t)
+                ? t
+                : null;
         }
 
         private void Start()
@@ -85,6 +103,12 @@ namespace MiniFactory.App
             if (productionView != null) productionView.Initialize(_controller);
             if (boostView != null) boostView.Initialize(_controller);
             if (cardSpawner != null) cardSpawner.Initialize(_controller);
+            if (tutorialOverlay != null)
+            {
+                // потребитель зашил свой Id — композер выдаёт нужного директора
+                var tutorial = GetTutorial(tutorialOverlay.TutorialId);
+                if (tutorial != null) tutorialOverlay.Initialize(_controller, tutorial);
+            }
 
             // магазин: каждая кнопка получает свой продукт из конфига (порядок совпадает)
             var products = _controller.Config.Products;
