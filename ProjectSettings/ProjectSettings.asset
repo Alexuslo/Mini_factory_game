@@ -680,7 +680,8 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Standalone: APP_UI_EDITOR_ONLY;SENTIS_ANALYTICS_ENABLED
+    Standalone: APP_UI_EDITOR_ONLY;SENTIS_ANALYTICS_ENABLED;MINIFACTORY_FIREBASE
+    Android: MINIFACTORY_FIREBASE
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
