@@ -43,7 +43,19 @@ namespace MiniFactory.App
         {
             // --- слой 1: инфраструктура ---
             var clock = new SystemClock();
-            var config = new LocalConfigSource(configAsset).GetConfig();
+            var localSource = new LocalConfigSource(configAsset);
+
+            // Remote Config (доп. задание): decorator поверх локального конфига.
+            // Firebase — за #if MINIFACTORY_FIREBASE; без него — локальный fallback из StreamingAssets.
+            Core.Contracts.IRemoteConfigService remoteConfig =
+#if MINIFACTORY_FIREBASE
+                new FirebaseRemoteConfigService();
+#else
+                new LocalRemoteConfigService();
+#endif
+            remoteConfig.Fetch();
+            var config = new Core.Services.RemoteConfigConfigSource(localSource, remoteConfig).GetConfig();
+
             var save = new JsonSaveService(JsonSaveService.DefaultPath);
             var analytics = new AnalyticsService(new ConsoleAnalyticsProvider());
             _purchases = new UnityIapService();

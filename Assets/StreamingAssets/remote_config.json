@@ -1,0 +1,8 @@
+{
+  "values": [
+    { "key": "boost_enabled", "value": "true" },
+    { "key": "boost_duration_seconds", "value": "300" },
+    { "key": "boost_multiplier", "value": "3" },
+    { "key": "max_offline_seconds", "value": "7200" }
+  ]
+}
