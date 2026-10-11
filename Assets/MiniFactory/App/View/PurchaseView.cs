@@ -1,3 +1,4 @@
+using MiniFactory.App.Config;
 using MiniFactory.Core.Game;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,6 +32,14 @@ namespace MiniFactory.App.View
         }
 
         private void OnClick() => _game?.BuyProduct(_productId);
+
+        /// <summary>Runtime-применение UI-конфига (без пересборки сцены).</summary>
+        public void ApplyUi(GameConfigAsset.UiEntry ui)
+        {
+            var img = GetComponent<Image>();
+            if (img != null) img.color = ui.storeButtonColor;
+            if (label != null) label.fontSize = ui.fontStoreButton;
+        }
 
         private void Refresh()
         {

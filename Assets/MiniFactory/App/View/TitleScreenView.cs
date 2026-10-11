@@ -1,4 +1,5 @@
 using System;
+using MiniFactory.App.Config;
 using MiniFactory.Core.Game;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +16,8 @@ namespace MiniFactory.App.View
         [SerializeField] private GameObject titlePanel;
         [SerializeField] private GameObject confirmPanel;
         [SerializeField] private GameObject offlinePanel;
+        [SerializeField] private Text titleText;
+        [SerializeField] private Text confirmText;
         [SerializeField] private Button continueButton;
         [SerializeField] private Button newGameButton;
         [SerializeField] private Button confirmYesButton;
@@ -25,6 +28,66 @@ namespace MiniFactory.App.View
         private GameController _game;
         private Action _onEntered;
         private bool _startedFresh;
+
+        /// <summary>Runtime-применение UI-конфига (без пересборки сцены).</summary>
+        public void ApplyUi(GameConfigAsset.UiEntry ui)
+        {
+            var bg = GetComponent<Image>();
+            if (bg != null)
+            {
+                var c = bg.color;
+                bg.color = new Color(c.r, c.g, c.b, ui.titleBackgroundAlpha);
+            }
+
+            var confirmBg = confirmPanel != null ? confirmPanel.GetComponent<Image>() : null;
+            if (confirmBg != null) confirmBg.color = ui.titlePanelColor;
+            var offlineBg = offlinePanel != null ? offlinePanel.GetComponent<Image>() : null;
+            if (offlineBg != null) offlineBg.color = ui.titlePanelColor;
+
+            if (titleText != null)
+            {
+                titleText.fontSize = ui.fontTitle;
+                SetCenter(titleText.rectTransform, ui.titleTextAnchorY, ui.titleTextWidth, ui.titleTextHeight);
+            }
+            if (confirmText != null)
+            {
+                confirmText.fontSize = ui.fontTitlePanel;
+                SetCenter(confirmText.rectTransform, ui.confirmTextAnchorY, ui.titlePanelTextWidth, ui.confirmTextHeight);
+            }
+            if (offlineText != null)
+            {
+                offlineText.fontSize = ui.fontTitlePanel;
+                SetCenter(offlineText.rectTransform, ui.offlineTextAnchorY, ui.titlePanelTextWidth, ui.offlineTextHeight);
+            }
+
+            ApplyButton(continueButton, ui, ui.titleButtonColor, ui.titleMenuButtonAnchorY, 0);
+            ApplyButton(newGameButton, ui, ui.titleButtonColor, ui.titleMenuButtonAnchorY, 1);
+            ApplyButton(confirmYesButton, ui, ui.titleConfirmColor, ui.confirmButtonAnchorY, 0);
+            ApplyButton(confirmNoButton, ui, ui.titleButtonColor, ui.confirmButtonAnchorY, 1);
+            ApplyButton(offlineOkButton, ui, ui.titleButtonColor, ui.offlineButtonAnchorY, 0);
+        }
+
+        private static void SetCenter(RectTransform rt, float anchorY, int width, int height)
+        {
+            rt.anchorMin = new Vector2(0.5f, anchorY);
+            rt.anchorMax = new Vector2(0.5f, anchorY);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(width, height);
+        }
+
+        private static void ApplyButton(Button button, GameConfigAsset.UiEntry ui, Color color, float anchorY, int row)
+        {
+            if (button == null) return;
+            var img = button.GetComponent<Image>();
+            if (img != null) img.color = color;
+            var rt = button.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, anchorY);
+            rt.anchorMax = new Vector2(0.5f, anchorY);
+            rt.anchoredPosition = new Vector2(0, row == 0 ? 0 : -(ui.titleButtonHeight + ui.titleButtonSpacing));
+            rt.sizeDelta = new Vector2(ui.titleButtonWidth, ui.titleButtonHeight);
+            var label = button.GetComponentInChildren<Text>();
+            if (label != null) label.fontSize = ui.fontTitlePanel;
+        }
 
         /// <summary>
         /// Показать экран. onEntered вызывается ровно один раз,
