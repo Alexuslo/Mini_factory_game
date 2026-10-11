@@ -103,6 +103,7 @@ namespace MiniFactory.App.DebugTools
             AddButton(_panel, "Открыть первую закрытую", UnlockFirstLocked);
             AddButton(_panel, "+1 уровень первой", UpgradeFirst);
             AddButton(_panel, "Сбросить туториал", () => _game.Model.SetTutorialStep(0));
+            AddButton(_panel, "Вывести конфиг в лог", LogConfig);
             AddButton(_panel, "Стереть сейв", () => _game.RestartProgress());
             AddButton(_panel, "Закрыть", () => SetPanelVisible(false));
         }
@@ -118,6 +119,20 @@ namespace MiniFactory.App.DebugTools
             save.Save(progress);
 
             Debug.Log($"[Debug] A/B variant → {_currentVariant} (применится при перезапуске)");
+        }
+
+        private void LogConfig()
+        {
+            var c = _game.Config;
+            Debug.Log($"[Config] boostEnabled={c.BoostEnabled}");
+            Debug.Log($"[Config] boostDuration={c.BoostDurationSeconds}s");
+            Debug.Log($"[Config] boostMultiplier={c.BoostMultiplier}x");
+            Debug.Log($"[Config] maxOffline={c.MaxOfflineSeconds}s");
+            Debug.Log($"[Config] tutorialId={c.TutorialId}, steps={c.Tutorial?.Length ?? 0}");
+            Debug.Log($"[Config] machines={c.Machines?.Length ?? 0}, products={c.Products?.Length ?? 0}");
+            if (c.Machines != null)
+                foreach (var m in c.Machines)
+                    Debug.Log($"[Config]   machine {m.Id}: unlock={m.UnlockCost}, prod={m.BaseProduction}/s, upgradeBase={m.UpgradeCostBase}");
         }
 
         private void UnlockFirstLocked()

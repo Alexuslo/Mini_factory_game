@@ -52,12 +52,8 @@ namespace MiniFactory.App.Config
 
         public bool TryGetValue(string key, out string value)
         {
-            if (!IsReady)
-            {
-                value = null;
-                return false;
-            }
-
+            // GetValue возвращает активные значения: кэш с прошлого запуска или дефолты.
+            // Не ждём fetch — на 2-м запуске кэш доступен сразу.
             var info = _rc.GetValue(key);
             if (info.Source == ValueSource.RemoteValue || info.Source == ValueSource.DefaultValue)
             {
