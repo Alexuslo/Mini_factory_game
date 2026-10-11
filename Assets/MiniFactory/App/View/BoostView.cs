@@ -1,3 +1,4 @@
+using MiniFactory.App.Config;
 using MiniFactory.Core.Game;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,6 +32,24 @@ namespace MiniFactory.App.View
                 button.onClick.AddListener(OnClick);
             }
             Refresh();
+        }
+
+        /// <summary>Runtime-применение UI-конфига (без пересборки сцены).</summary>
+        public void ApplyUi(GameConfigAsset.UiEntry ui)
+        {
+            if (button != null)
+            {
+                var rt = button.GetComponent<RectTransform>();
+                rt.sizeDelta = new Vector2(ui.boostWidth, ui.boostHeight);
+                rt.anchoredPosition = new Vector2(-ui.boostOffsetRight, -ui.boostOffsetTop);
+                var img = button.GetComponent<Image>();
+                if (img != null)
+                {
+                    _idleColor = ui.boostColor;
+                    if (_game == null || !_game.IsBoostActive) img.color = ui.boostColor;
+                }
+            }
+            if (label != null) label.fontSize = ui.fontBoost;
         }
 
         private void OnClick() => _game?.StartBoost();
