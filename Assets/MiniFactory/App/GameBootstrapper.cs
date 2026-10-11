@@ -25,8 +25,9 @@ namespace MiniFactory.App
         [SerializeField] private BalanceView balanceView;
         [SerializeField] private ProductionView productionView;
         [SerializeField] private BoostView boostView;
-        [SerializeField] private MachineGridRenderer machineGrid;
+        [SerializeField] private MachineCardSpawner cardSpawner;
         [SerializeField] private PurchaseView[] purchaseViews;
+        [SerializeField] private TitleScreenView titleScreen;
 
         private GameController _controller;
         private UnityIapService _purchases;
@@ -61,13 +62,29 @@ namespace MiniFactory.App
                 foreach (var p in _controller.Config.Products) productIds.Add(p.Id);
             _purchases.Initialize(productIds);
 
-            _controller.Initialize();
+            // титульный экран (ТЗ п.10): показываем до входа в игру,
+            // автосейвы при этом выключены (см. GameController.SaveProgress).
+            // Initialize() зовёт сам титульник (ему нужен StartReport для offline-диалога).
+            if (titleScreen != null)
+            {
+                if (gameLoop != null) gameLoop.Paused = true;
+                titleScreen.Show(_controller, OnGameEntered);
+            }
+            else
+            {
+                _controller.Initialize();
+                OnGameEntered();
+            }
+        }
+
+        private void OnGameEntered()
+        {
 
             // каждая View подписывается на события модели и шлёт команды контроллеру
             if (balanceView != null) balanceView.Initialize(_controller.Model);
             if (productionView != null) productionView.Initialize(_controller);
             if (boostView != null) boostView.Initialize(_controller);
-            if (machineGrid != null) machineGrid.Initialize(_controller);
+            if (cardSpawner != null) cardSpawner.Initialize(_controller);
 
             // магазин: каждая кнопка получает свой продукт из конфига (порядок совпадает)
             var products = _controller.Config.Products;
@@ -75,6 +92,8 @@ namespace MiniFactory.App
                 for (var i = 0; i < purchaseViews.Length && i < products.Length; i++)
                     if (purchaseViews[i] != null)
                         purchaseViews[i].Initialize(_controller, products[i].Id);
+
+            if (gameLoop != null) gameLoop.Paused = false;
         }
     }
 }

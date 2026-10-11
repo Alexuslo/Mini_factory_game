@@ -11,6 +11,9 @@ namespace MiniFactory.App.Gameplay
     {
         private GameController _controller;
 
+        /// <summary>true — тики остановлены (титульный экран до входа в игру).</summary>
+        public bool Paused { get; set; }
+
         public void Initialize(GameController controller)
         {
             _controller = controller;
@@ -18,6 +21,7 @@ namespace MiniFactory.App.Gameplay
 
         private void Update()
         {
+            if (Paused) return;
             _controller?.Tick(Time.deltaTime);
         }
 

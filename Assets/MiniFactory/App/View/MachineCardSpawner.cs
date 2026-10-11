@@ -7,7 +7,7 @@ namespace MiniFactory.App.View
     /// Сетка карточек: создаёт их по количеству машин из конфига
     /// (состав и раскладка — данные, а не хардкод в сцене).
     /// </summary>
-    public sealed class MachineGridRenderer : MonoBehaviour
+    public sealed class MachineCardSpawner : MonoBehaviour
     {
         [SerializeField] private MachineCardView cardPrefab;
 
