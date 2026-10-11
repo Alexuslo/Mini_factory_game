@@ -160,6 +160,15 @@ namespace MiniFactory.App.Config
 
             public Color titleButtonColor = new Color(0.2f, 0.45f, 0.32f);
             public Color titleConfirmColor = new Color(0.65f, 0.25f, 0.2f);
+
+            [Header("Tutorial")]
+            [Tooltip("Шрифт-стрелка «▼» туториала, px")]
+            public int tutorialArrowSize = 72;
+
+            [Tooltip("Смещение центра стрелки от верха кнопки, px (стрелка висит над кнопкой)")]
+            public int tutorialArrowOffsetY = 90;
+
+            public Color tutorialArrowColor = new Color(1f, 0.85f, 0.2f);
         }
 
         [Header("Machines")]

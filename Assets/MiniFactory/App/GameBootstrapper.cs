@@ -28,6 +28,7 @@ namespace MiniFactory.App
         [SerializeField] private MachineCardSpawner cardSpawner;
         [SerializeField] private PurchaseView[] purchaseViews;
         [SerializeField] private TitleScreenView titleScreen;
+        [SerializeField] private TutorialOverlay tutorialOverlay;
 
         private GameController _controller;
         private UnityIapService _purchases;
@@ -85,6 +86,7 @@ namespace MiniFactory.App
             if (productionView != null) productionView.Initialize(_controller);
             if (boostView != null) boostView.Initialize(_controller);
             if (cardSpawner != null) cardSpawner.Initialize(_controller);
+            if (tutorialOverlay != null) tutorialOverlay.Initialize(_controller);
 
             // магазин: каждая кнопка получает свой продукт из конфига (порядок совпадает)
             var products = _controller.Config.Products;

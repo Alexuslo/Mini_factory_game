@@ -23,6 +23,7 @@ namespace MiniFactory.App
         [SerializeField] private RectTransform storePanel;
         [SerializeField] private MachineCardSpawner cardSpawner;
         [SerializeField] private TitleScreenView titleScreen;
+        [SerializeField] private TutorialOverlay tutorialOverlay;
         [SerializeField] private PurchaseView[] purchaseViews;
 
         private void Awake()
@@ -96,6 +97,7 @@ namespace MiniFactory.App
                     if (view != null) view.ApplyUi(ui);
 
             if (titleScreen != null) titleScreen.ApplyUi(ui);
+            if (tutorialOverlay != null) tutorialOverlay.ApplyUi(ui);
         }
     }
 }
