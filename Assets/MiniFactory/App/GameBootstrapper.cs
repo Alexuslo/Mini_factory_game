@@ -60,12 +60,20 @@ namespace MiniFactory.App
             var baseSource = new Core.Config.ExperimentConfigSource(localSource, experiment);
 
             // Remote Config (доп. задание): decorator поверх experiment.
-            // Firebase — за #if MINIFACTORY_FIREBASE; без него — локальный fallback из StreamingAssets.
-            Core.Contracts.IRemoteConfigService remoteConfig =
+            // Firebase — за #if MINIFACTORY_FIREBASE; fallback — локальный JSON.
+            Core.Contracts.IRemoteConfigService remoteConfig;
 #if MINIFACTORY_FIREBASE
-                new FirebaseRemoteConfigService();
+            try
+            {
+                remoteConfig = new FirebaseRemoteConfigService();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[Bootstrapper] Firebase init failed, falling back to local: {e.Message}");
+                remoteConfig = new LocalRemoteConfigService();
+            }
 #else
-                new LocalRemoteConfigService();
+            remoteConfig = new LocalRemoteConfigService();
 #endif
             var remoteSource = new Core.Services.RemoteConfigConfigSource(baseSource, remoteConfig);
             var config = remoteSource.GetConfig();
