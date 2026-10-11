@@ -47,3 +47,60 @@ MonoBehaviour:
   boostDurationSeconds: 300
   boostMultiplier: 3
   maxOfflineSeconds: 7200
+  ui:
+    cameraBackground: {r: 0.04, g: 0.05, b: 0.07, a: 1}
+    topBarHeight: 240
+    topBarColor: {r: 0.12, g: 0.14, b: 0.18, a: 1}
+    balanceTextTop: 46
+    productionTextTop: 152
+    productionTextColor: {r: 0.75, g: 0.8, b: 0.85, a: 1}
+    fontBalance: 76
+    fontProduction: 44
+    fontBoost: 34
+    boostColor: {r: 0.85, g: 0.55, b: 0.15, a: 1}
+    boostOffsetRight: 130
+    boostOffsetTop: 160
+    boostWidth: 220
+    boostHeight: 76
+    cardHeight: 200
+    cardSpacing: 24
+    fontCardName: 42
+    fontCardInfo: 32
+    fontCardCost: 30
+    fontCardButton: 38
+    cardButtonWidth: 210
+    cardButtonHeight: 100
+    cardButtonMargin: 16
+    cardBackgroundColor: {r: 0.3, g: 0.3, b: 0.32, a: 1}
+    cardLockedColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
+    cardUnlockedColor: {r: 0.2, g: 0.45, b: 0.3, a: 1}
+    cardButtonColor: {r: 0.95, g: 0.75, b: 0.2, a: 1}
+    cardInfoColor: {r: 0.8, g: 0.85, b: 0.9, a: 1}
+    cardCostColor: {r: 1, g: 0.85, b: 0.4, a: 1}
+    listTopOffset: 500
+    listSideMargin: 20
+    storePanelHeight: 130
+    storeMargin: 20
+    storeSpacing: 16
+    fontStoreButton: 34
+    storeButtonColor: {r: 0.2, g: 0.45, b: 0.32, a: 1}
+    fontTitle: 96
+    fontTitlePanel: 40
+    titleButtonWidth: 640
+    titleButtonHeight: 120
+    titleButtonSpacing: 40
+    titleTextAnchorY: 0.65
+    titleMenuButtonAnchorY: 0.42
+    confirmTextAnchorY: 0.58
+    confirmButtonAnchorY: 0.4
+    offlineTextAnchorY: 0.55
+    offlineButtonAnchorY: 0.38
+    titleTextWidth: 1000
+    titleTextHeight: 200
+    titlePanelTextWidth: 900
+    confirmTextHeight: 160
+    offlineTextHeight: 220
+    titleBackgroundAlpha: 0.85
+    titlePanelColor: {r: 0.04, g: 0.05, b: 0.07, a: 0.97}
+    titleButtonColor: {r: 0.2, g: 0.45, b: 0.32, a: 1}
+    titleConfirmColor: {r: 0.65, g: 0.25, b: 0.2, a: 1}

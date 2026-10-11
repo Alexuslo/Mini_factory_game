@@ -41,6 +41,119 @@ namespace MiniFactory.App.Config
             public int boostSeconds;
         }
 
+        [Serializable]
+        public sealed class UiEntry
+        {
+            [Header("Camera")]
+            [Tooltip("Фон камеры (пустой цех)")]
+            public Color cameraBackground = new Color(0.04f, 0.05f, 0.07f);
+
+            [Header("TopBar")]
+            [Tooltip("Высота верхней панели, px")]
+            public int topBarHeight = 240;
+            public Color topBarColor = new Color(0.12f, 0.14f, 0.18f);
+
+            [Tooltip("Отступ строки баланса от верха панели, px")]
+            public int balanceTextTop = 46;
+
+            [Tooltip("Отступ строки дохода от верха панели, px")]
+            public int productionTextTop = 152;
+            public Color productionTextColor = new Color(0.75f, 0.8f, 0.85f);
+            public int fontBalance = 76;
+            public int fontProduction = 44;
+            public int fontBoost = 34;
+
+            [Header("Boost button")]
+            public Color boostColor = new Color(0.85f, 0.55f, 0.15f);
+
+            [Tooltip("Смещение центра кнопки от правого края панели, px")]
+            public int boostOffsetRight = 130;
+
+            [Tooltip("Смещение центра кнопки от верха панели, px")]
+            public int boostOffsetTop = 160;
+            public int boostWidth = 220;
+            public int boostHeight = 76;
+
+            [Header("Card")]
+            [Tooltip("Высота карточки машины, px (canvas 1080x1920)")]
+            public int cardHeight = 200;
+
+            [Tooltip("Вертикальный отступ между карточками, px")]
+            public int cardSpacing = 24;
+
+            public int fontCardName = 42;
+            public int fontCardInfo = 32;
+            public int fontCardCost = 30;
+            public int fontCardButton = 38;
+            public int cardButtonWidth = 210;
+            public int cardButtonHeight = 100;
+
+            [Tooltip("Отступ кнопки действия от правого края карточки, px")]
+            public int cardButtonMargin = 16;
+            public Color cardBackgroundColor = new Color(0.30f, 0.30f, 0.32f);
+            public Color cardLockedColor = new Color(0.35f, 0.35f, 0.35f);
+            public Color cardUnlockedColor = new Color(0.20f, 0.45f, 0.30f);
+            public Color cardButtonColor = new Color(0.95f, 0.75f, 0.2f);
+            public Color cardInfoColor = new Color(0.8f, 0.85f, 0.9f);
+            public Color cardCostColor = new Color(1f, 0.85f, 0.4f);
+
+            [Header("List")]
+            [Tooltip("Отступ списка карточек сверху, px (при смене topBarHeight подстройте)")]
+            public int listTopOffset = 280;
+
+            [Tooltip("Боковой отступ списка карточек, px (слева и справа)")]
+            public int listSideMargin = 20;
+
+            [Header("Store")]
+            [Tooltip("Высота панели магазина (и её кнопок), px")]
+            public int storePanelHeight = 130;
+
+            [Tooltip("Отступ панели магазина от краёв экрана, px")]
+            public int storeMargin = 20;
+
+            [Tooltip("Зазор между кнопками магазина, px")]
+            public int storeSpacing = 16;
+            public int fontStoreButton = 34;
+            public Color storeButtonColor = new Color(0.2f, 0.45f, 0.32f);
+
+            [Header("Title")]
+            [Tooltip("Шрифт названия игры на титульном экране")]
+            public int fontTitle = 96;
+
+            [Tooltip("Шрифт кнопок и текста панелей титульника")]
+            public int fontTitlePanel = 40;
+
+            public int titleButtonWidth = 640;
+            public int titleButtonHeight = 120;
+
+            [Tooltip("Зазор между кнопками, px")]
+            public int titleButtonSpacing = 40;
+
+            [Tooltip("AnchorY блоков титульника (0 снизу, 1 сверху)")]
+            public float titleTextAnchorY = 0.65f;
+            public float titleMenuButtonAnchorY = 0.42f;
+            public float confirmTextAnchorY = 0.58f;
+            public float confirmButtonAnchorY = 0.40f;
+            public float offlineTextAnchorY = 0.55f;
+            public float offlineButtonAnchorY = 0.38f;
+
+            [Tooltip("Габариты текстовых блоков, px")]
+            public int titleTextWidth = 1000;
+            public int titleTextHeight = 200;
+            public int titlePanelTextWidth = 900;
+            public int confirmTextHeight = 160;
+            public int offlineTextHeight = 220;
+
+            [Tooltip("Альфа затемнения фона титульника")]
+            public float titleBackgroundAlpha = 0.85f;
+
+            [Tooltip("Затемнение панели подтверждения/offline-диалога")]
+            public Color titlePanelColor = new Color(0.04f, 0.05f, 0.07f, 0.97f);
+
+            public Color titleButtonColor = new Color(0.2f, 0.45f, 0.32f);
+            public Color titleConfirmColor = new Color(0.65f, 0.25f, 0.2f);
+        }
+
         [Header("Machines")]
         public MachineEntry[] machines;
 
@@ -55,6 +168,10 @@ namespace MiniFactory.App.Config
         [Header("Offline")]
         [Tooltip("Максимальное время offline production, сек")]
         public int maxOfflineSeconds = 7200;
+
+        [Header("UI")]
+        [Tooltip("Шрифты и размеры интерфейса (canvas 1080x1920). Применяются при Build Scene")]
+        public UiEntry ui = new UiEntry();
 
         public GameConfig ToGameConfig()
         {
