@@ -54,6 +54,9 @@ namespace MiniFactory.App
             if (topBar != null)
             {
                 topBar.sizeDelta = new Vector2(topBar.sizeDelta.x, ui.topBarHeight);
+                var topBarRt = topBar;
+                var pos = topBarRt.anchoredPosition;
+                topBarRt.anchoredPosition = new Vector2(pos.x, -ui.topBarOffsetTop);
                 var barImage = topBar.GetComponent<Image>();
                 if (barImage != null) barImage.color = ui.topBarColor;
             }

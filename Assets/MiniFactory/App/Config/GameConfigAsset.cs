@@ -72,6 +72,10 @@ namespace MiniFactory.App.Config
             [Header("TopBar")]
             [Tooltip("Высота верхней панели, px")]
             public int topBarHeight = 240;
+
+            [Tooltip("Отступ верхнего края панели от верха экрана, px")]
+            public int topBarOffsetTop = 0;
+
             public Color topBarColor = new Color(0.12f, 0.14f, 0.18f);
 
             [Tooltip("Отступ строки баланса от верха панели, px")]
