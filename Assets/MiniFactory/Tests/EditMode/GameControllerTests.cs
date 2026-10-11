@@ -406,6 +406,64 @@ namespace MiniFactory.Tests.EditMode
             Assert.IsFalse(Model_GetMachine(h, "m2").IsUnlocked);
         }
 
+        [Test]
+        public void Tutorial_FirstUpgrade_AdvancesToStep1()
+        {
+            var h = new Harness();
+            h.Game.Initialize();
+            h.Model.AddBalance(1000);
+
+            Assert.AreEqual(0, h.Model.TutorialStep);
+
+            h.Game.UpgradeMachine("m1");
+
+            Assert.AreEqual(1, h.Model.TutorialStep);
+        }
+
+        [Test]
+        public void Tutorial_UnlockAfterStep1_AdvancesToStep2_AndStays()
+        {
+            var h = new Harness();
+            h.Game.Initialize();
+            h.Model.AddBalance(1000);
+
+            h.Game.UpgradeMachine("m1"); // 0 → 1
+            h.Game.UnlockMachine("m2");  // 1 → 2
+
+            Assert.AreEqual(2, h.Model.TutorialStep);
+
+            h.Game.UpgradeMachine("m1"); // дальнейшие действия не двигают шаг
+            Assert.AreEqual(2, h.Model.TutorialStep);
+        }
+
+        [Test]
+        public void Tutorial_UnlockBeforeUpgrade_DoesNotSkipSteps()
+        {
+            var h = new Harness();
+            h.Game.Initialize();
+            h.Model.AddBalance(1000);
+
+            h.Game.UnlockMachine("m2"); // шаг всё ещё 0 — не первый апгрейд
+
+            Assert.AreEqual(0, h.Model.TutorialStep);
+        }
+
+        [Test]
+        public void Tutorial_StepSurvivesSaveLoad()
+        {
+            var h = new Harness();
+            h.Game.Initialize();
+            h.Model.AddBalance(1000);
+            h.Game.UpgradeMachine("m1"); // tutorialStep = 1, автосейв
+
+            // новая сессия с того же сейва
+            var h2 = new Harness();
+            h2.Save.Progress = h.Save.Progress;
+            h2.Game.Initialize();
+
+            Assert.AreEqual(1, h2.Model.TutorialStep);
+        }
+
         private static MachineState Model_GetMachine(Harness h, string id) => h.Model.GetMachine(id);
     }
 }

@@ -196,6 +196,7 @@ namespace MiniFactory.Core.Game
             if (!_model.TrySpend(config.UnlockCost)) return false;
 
             _model.UnlockMachine(id);
+            if (_model.TutorialStep == 1) _model.SetTutorialStep(2); // открыли вторую — туториал кончился
             SaveProgress();
 
             _analytics.Log(AnalyticsEvents.MachineUnlocked, new Dictionary<string, object>
@@ -217,6 +218,7 @@ namespace MiniFactory.Core.Game
             if (!_model.TrySpend(cost)) return false;
 
             _model.SetLevel(id, state.Level + 1);
+            if (_model.TutorialStep == 0) _model.SetTutorialStep(1); // первый апгрейд — шаг «открой вторую»
             SaveProgress();
 
             _analytics.Log(AnalyticsEvents.MachineUpgraded, new Dictionary<string, object>
