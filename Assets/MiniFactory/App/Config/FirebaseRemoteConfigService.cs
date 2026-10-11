@@ -15,14 +15,14 @@ namespace MiniFactory.App.Config
     /// </summary>
     public sealed class FirebaseRemoteConfigService : Core.Contracts.IRemoteConfigService
     {
-        private readonly Firebase.RemoteConfig.RemoteConfig _rc;
+        private readonly FirebaseRemoteConfig _rc;
 
         public bool IsReady { get; private set; }
         public event Action Fetched;
 
         public FirebaseRemoteConfigService()
         {
-            _rc = Firebase.RemoteConfig.RemoteConfig.Instance;
+            _rc = FirebaseRemoteConfig.DefaultInstance;
             // дефолты: значения из локального конфига (fallback если fetch не удался)
             _rc.SetDefaultsAsync(CreateDefaults()).ContinueWith(_ =>
             {
