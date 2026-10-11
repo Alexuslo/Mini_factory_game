@@ -118,6 +118,11 @@ namespace MiniFactory.App
                         purchaseViews[i].Initialize(_controller, products[i].Id);
 
             if (gameLoop != null) gameLoop.Paused = false;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // debug-панель: 5 тапов в правом верхнем углу (только редактор / dev build)
+            MiniFactory.App.DebugTools.DebugPanelView.Attach(_controller);
+#endif
         }
     }
 }

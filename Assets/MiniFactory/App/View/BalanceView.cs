@@ -9,6 +9,9 @@ namespace MiniFactory.App.View
     {
         [SerializeField] private Text label;
 
+        /// <summary>Rect текста баланса — на него вешается 5-тап для debug-панели.</summary>
+        public RectTransform LabelRect => label != null ? label.rectTransform : null;
+
         private FactoryModel _model;
 
         public void Initialize(FactoryModel model)
