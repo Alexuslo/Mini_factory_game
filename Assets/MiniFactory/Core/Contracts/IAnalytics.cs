@@ -28,5 +28,6 @@ namespace MiniFactory.Core.Contracts
         public const string OfflineIncomeApplied = "offline_income_applied";
         public const string PurchaseSucceeded = "purchase_succeeded";
         public const string PurchaseFailed = "purchase_failed";
+        public const string ProgressRestarted = "progress_restarted";
     }
 }

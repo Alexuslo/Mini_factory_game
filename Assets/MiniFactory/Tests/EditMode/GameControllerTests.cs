@@ -117,6 +117,7 @@ namespace MiniFactory.Tests.EditMode
         public void Unlock_EnoughBalance_SpendsAndLogs()
         {
             var h = new Harness();
+            h.Game.Initialize(); // вход в игру — иначе автосейвы выключены (guard _initialized)
             h.Model.AddBalance(100);
 
             var ok = h.Game.UnlockMachine("m2");
@@ -258,6 +259,7 @@ namespace MiniFactory.Tests.EditMode
         public void Purchase_CoinsPack_Success_AddsRewardAndLogs()
         {
             var h = new Harness();
+            h.Game.Initialize(); // вход в игру — иначе автосейвы выключены (guard _initialized)
 
             h.Game.BuyProduct("coins_pack_small");
             h.Purchases.Succeed("coins_pack_small");
@@ -307,6 +309,101 @@ namespace MiniFactory.Tests.EditMode
             Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.PurchaseFailed));
             var (_, pars) = h.Analytics.First(AnalyticsEvents.PurchaseFailed);
             Assert.AreEqual("iap_unavailable", pars["error"]);
+        }
+
+        [Test]
+        public void Initialize_WithSave_ReturnsStartReport_WithOffline()
+        {
+            var h = new Harness(nowUnix: 1_000_600);
+            h.Save.Progress = new PlayerProgress
+            {
+                balance = 0,
+                lastActiveUnix = 1_000_000,
+                boostEndUnix = 0,
+                machines = new[]
+                {
+                    new MachineSave { id = "m1", level = 1, unlocked = true },
+                    new MachineSave { id = "m2", level = 0, unlocked = false },
+                    new MachineSave { id = "m3", level = 0, unlocked = false }
+                }
+            };
+
+            var report = h.Game.Initialize();
+
+            Assert.IsTrue(report.LoadedExistingSave);
+            Assert.AreEqual(6000, report.OfflineIncome, 0.0001);
+            Assert.AreEqual(600, report.OfflineElapsedSeconds);
+            Assert.IsTrue(report.ShowOfflineDialog);
+        }
+
+        [Test]
+        public void Initialize_NoSave_ReturnsReport_WithoutOffline()
+        {
+            var h = new Harness();
+
+            var report = h.Game.Initialize();
+
+            Assert.IsFalse(report.LoadedExistingSave);
+            Assert.IsFalse(report.ShowOfflineDialog);
+        }
+
+        [Test]
+        public void SaveProgress_BeforeInitialize_DoesNotCreateSave()
+        {
+            var h = new Harness();
+
+            h.Game.SaveProgress(); // сворачивание на титульном экране не должно затирать сейв
+
+            Assert.IsFalse(h.Save.HasProgress());
+        }
+
+        [Test]
+        public void HasSave_ReflectsSaveService()
+        {
+            var h = new Harness();
+            Assert.IsFalse(h.Game.HasSave);
+
+            h.Game.Initialize(); // без сейва создаёт стартовое состояние
+
+            Assert.IsTrue(h.Game.HasSave);
+        }
+
+        [Test]
+        public void RestartProgress_DeletesSave_AndLogs()
+        {
+            var h = new Harness();
+            h.Game.Initialize();
+
+            h.Game.RestartProgress();
+
+            Assert.IsFalse(h.Save.HasProgress());
+            Assert.AreEqual(1, h.Analytics.Count(AnalyticsEvents.ProgressRestarted));
+        }
+
+        [Test]
+        public void RestartProgress_ThenInitialize_FreshState()
+        {
+            var h = new Harness(nowUnix: 1_000_600);
+            h.Save.Progress = new PlayerProgress
+            {
+                balance = 12345,
+                lastActiveUnix = 1_000_000,
+                boostEndUnix = 0,
+                machines = new[]
+                {
+                    new MachineSave { id = "m1", level = 5, unlocked = true },
+                    new MachineSave { id = "m2", level = 3, unlocked = true },
+                    new MachineSave { id = "m3", level = 0, unlocked = false }
+                }
+            };
+
+            h.Game.RestartProgress();
+            var report = h.Game.Initialize();
+
+            Assert.IsFalse(report.LoadedExistingSave); // сейва уже нет
+            Assert.AreEqual(0, h.Model.Balance, 0.0001);
+            Assert.AreEqual(1, Model_GetMachine(h, "m1").Level); // стартовое состояние
+            Assert.IsFalse(Model_GetMachine(h, "m2").IsUnlocked);
         }
 
         private static MachineState Model_GetMachine(Harness h, string id) => h.Model.GetMachine(id);
