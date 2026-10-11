@@ -60,3 +60,5 @@ Thumbs.db
 # Локальный editor-скрипт сборки сцены (вспомогательный инструмент, не часть проекта)
 Assets/MiniFactory/Editor/
 Assets/MiniFactory/Editor.meta
+.utmp/
+TestResults.xml
