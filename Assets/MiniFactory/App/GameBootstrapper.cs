@@ -67,8 +67,20 @@ namespace MiniFactory.App
 #else
                 new LocalRemoteConfigService();
 #endif
+            var remoteSource = new Core.Services.RemoteConfigConfigSource(baseSource, remoteConfig);
+            var config = remoteSource.GetConfig();
+            // Firebase fetch асинхронный — на первом запуске конфиг строится до завершения.
+            // Когда fetch завершится, перечитываем и обновляем поля на том же экземпляре,
+            // который держит контроллер (GameConfig — mutable fields).
+            remoteConfig.Fetched += () =>
+            {
+                var updated = remoteSource.GetConfig();
+                config.BoostEnabled = updated.BoostEnabled;
+                config.BoostDurationSeconds = updated.BoostDurationSeconds;
+                config.BoostMultiplier = updated.BoostMultiplier;
+                config.MaxOfflineSeconds = updated.MaxOfflineSeconds;
+            };
             remoteConfig.Fetch();
-            var config = new Core.Services.RemoteConfigConfigSource(baseSource, remoteConfig).GetConfig();
 
             // сохраняем назначенный вариант (при первом запуске)
             if (existingProgress == null)
