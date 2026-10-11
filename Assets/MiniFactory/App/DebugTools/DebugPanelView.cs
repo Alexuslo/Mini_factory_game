@@ -84,16 +84,16 @@ namespace MiniFactory.App.DebugTools
             _panel.anchorMin = new Vector2(0.5f, 0.5f);
             _panel.anchorMax = new Vector2(0.5f, 0.5f);
             _panel.pivot = new Vector2(0.5f, 0.5f);
-            _panel.sizeDelta = new Vector2(480, 640);
+            _panel.sizeDelta = new Vector2(960, 1280);
             panelGo.GetComponent<Image>().color = new Color(0.08f, 0.08f, 0.1f, 0.95f);
 
             var layout = panelGo.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(24, 24, 24, 24);
-            layout.spacing = 12;
+            layout.padding = new RectOffset(48, 48, 48, 48);
+            layout.spacing = 24;
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = true;
 
-            AddLabel(_panel, "DEBUG", 40, TextAnchor.MiddleCenter);
+            AddLabel(_panel, "DEBUG", 80, TextAnchor.MiddleCenter);
             AddButton(_panel, "+1000 монет", () => _game.Model.AddBalance(1000));
             AddButton(_panel, "+10K монет", () => _game.Model.AddBalance(10_000));
             AddButton(_panel, "Открыть первую закрытую", UnlockFirstLocked);
@@ -143,7 +143,7 @@ namespace MiniFactory.App.DebugTools
         {
             var go = new GameObject("Btn_" + label, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
             go.transform.SetParent(parent, false);
-            go.GetComponent<LayoutElement>().preferredHeight = 72;
+            go.GetComponent<LayoutElement>().preferredHeight = 144;
             go.GetComponent<Image>().color = new Color(0.2f, 0.35f, 0.5f);
             go.GetComponent<Button>().onClick.AddListener(() => onClick?.Invoke());
 
@@ -156,7 +156,7 @@ namespace MiniFactory.App.DebugTools
             rt.offsetMax = Vector2.zero;
             var t = textGo.GetComponent<Text>();
             t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            t.fontSize = 32;
+            t.fontSize = 64;
             t.alignment = TextAnchor.MiddleCenter;
             t.color = Color.white;
             t.text = label;
