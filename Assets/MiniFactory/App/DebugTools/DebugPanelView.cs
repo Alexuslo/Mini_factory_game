@@ -103,7 +103,7 @@ namespace MiniFactory.App.DebugTools
             AddButton(_panel, "Открыть первую закрытую", UnlockFirstLocked);
             AddButton(_panel, "+1 уровень первой", UpgradeFirst);
             AddButton(_panel, "Сбросить туториал", () => _game.Model.SetTutorialStep(0));
-            AddButton(_panel, "Показать конфиг", LogConfig);
+            AddButton(_panel, "Вывести конфиг в лог", LogConfig);
             AddButton(_panel, "Стереть сейв", () => _game.RestartProgress());
             AddButton(_panel, "Закрыть", () => SetPanelVisible(false));
         }
