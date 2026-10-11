@@ -27,6 +27,12 @@ namespace MiniFactory.Core.Config
         /// <summary>Продукты магазина (ТЗ п.4).</summary>
         public ProductConfig[] Products;
 
+        /// <summary>Id туториала — по нему композер выдаёт TutorialDirector.</summary>
+        public string TutorialId = "main";
+
+        /// <summary>Шаги мини-туториала; null/пусто — туториал выключен.</summary>
+        public TutorialStep[] Tutorial;
+
         public MachineConfig GetMachine(string id)
         {
             if (Machines == null) return null;

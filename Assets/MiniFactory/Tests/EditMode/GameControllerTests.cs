@@ -74,8 +74,9 @@ namespace MiniFactory.Tests.EditMode
             public readonly FactoryModel Model;
             public readonly EconomyService Economy;
             public readonly GameController Game;
+            public readonly TutorialDirector Tutorial;
 
-            public Harness(long nowUnix = 1_000_000)
+            public Harness(long nowUnix = 1_000_000, TutorialStep[] tutorialSteps = null)
             {
                 Clock.NowUnix = nowUnix;
                 Config = new GameConfig
@@ -95,12 +96,21 @@ namespace MiniFactory.Tests.EditMode
                     {
                         new ProductConfig { Id = "coins_pack_small", CoinsReward = 1000 },
                         new ProductConfig { Id = "boost_pack", CoinsReward = 0, BoostSeconds = 600 }
-                    }
+                    },
+                    Tutorial = tutorialSteps ?? DefaultTutorialSteps()
                 };
                 Model = new FactoryModel(Config);
                 Economy = new EconomyService(Config);
                 Game = new GameController(Config, Model, Economy, Save, Analytics, Clock, Purchases);
+                Tutorial = new TutorialDirector(Model, Config);
+                Tutorial.Bind(Game);
             }
+
+            private static TutorialStep[] DefaultTutorialSteps() => new[]
+            {
+                new TutorialStep { Trigger = TutorialTrigger.UpgradeAny, TargetMachine = "first" },
+                new TutorialStep { Trigger = TutorialTrigger.UnlockAny, TargetMachine = "firstLocked" }
+            };
         }
 
         [Test]
