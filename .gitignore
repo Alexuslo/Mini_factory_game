@@ -63,3 +63,7 @@ Assets/MiniFactory/Editor.meta
 .utmp/
 TestResults.xml
 *.log
+
+# Firebase desktop native plugins >50MB (macOS/Linux, не нужны для Android/Windows)
+Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_17_0.bundle
+Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_17_0.so
