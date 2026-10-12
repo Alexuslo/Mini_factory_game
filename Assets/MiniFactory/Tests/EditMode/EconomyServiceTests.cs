@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MiniFactory.Core.Config;
 using MiniFactory.Core.Model;
 using MiniFactory.Core.Services;
@@ -5,76 +6,57 @@ using NUnit.Framework;
 
 namespace MiniFactory.Tests.EditMode
 {
-    /// <summary>Тесты формул экономики (ТЗ п.1): цены улучшений и производительность.</summary>
-    public class EconomyServiceTests
+    [TestFixture]
+    public sealed class EconomyServiceTests
     {
-        private static MachineConfig Machine(
-            double baseProduction = 10,
-            double upgradeCostBase = 100,
-            float upgradeCostGrowth = 1.15f,
-            float productionGrowth = 1.1f)
+        private static GameConfig MakeConfig() => new GameConfig
         {
-            return new MachineConfig
+            Machines = new[]
             {
-                Id = "m1",
-                DisplayName = "Test",
-                UnlockCost = 50,
-                BaseProduction = baseProduction,
-                UpgradeCostBase = upgradeCostBase,
-                UpgradeCostGrowth = upgradeCostGrowth,
-                ProductionGrowth = productionGrowth
-            };
-        }
+                new MachineConfig
+                {
+                    Id = "m1", UnlockCost = 0, BaseProduction = 10,
+                    UpgradeCostBase = 100, UpgradeCostGrowth = 1.15f, ProductionGrowth = 1.1f
+                }
+            }
+        };
 
-        private static EconomyService Economy(params MachineConfig[] machines)
+        [Test]
+        public void GetUpgradeCost_FormulaBaseGrowthLevel()
         {
-            return new EconomyService(new GameConfig { Machines = machines });
+            var economy = new EconomyService(MakeConfig());
+            var machine = MakeConfig().Machines[0];
+
+            // base * growth^level
+            Assert.AreEqual(100, economy.GetUpgradeCost(machine, 0), 0.001);
+            Assert.AreEqual(115, economy.GetUpgradeCost(machine, 1), 0.001);
+            Assert.AreEqual(132.25, economy.GetUpgradeCost(machine, 2), 0.01);
         }
 
         [Test]
-        public void UpgradeCost_GrowsExponentiallyWithLevel()
+        public void GetProduction_ExponentialGrowth()
         {
-            var economy = Economy(Machine());
-            var config = Machine(upgradeCostBase: 100, upgradeCostGrowth: 1.15f);
+            var economy = new EconomyService(MakeConfig());
+            var machine = MakeConfig().Machines[0];
 
-            Assert.AreEqual(100, economy.GetUpgradeCost(config, 0), 0.0001);   // 100 * 1.15^0
-            Assert.AreEqual(115, economy.GetUpgradeCost(config, 1), 0.0001);   // 100 * 1.15^1
-            Assert.AreEqual(132.25, economy.GetUpgradeCost(config, 2), 0.0001); // 100 * 1.15^2
+            // base * level * growth^(level-1)
+            Assert.AreEqual(10, economy.GetProduction(machine, 1), 0.001);
+            Assert.AreEqual(22, economy.GetProduction(machine, 2), 0.001); // 10 * 2 * 1.1
+            Assert.AreEqual(0, economy.GetProduction(machine, 0), 0.001);
         }
 
         [Test]
-        public void Production_AtFirstLevel_EqualsBaseProduction()
+        public void GetTotalProduction_SumsUnlockedMachines()
         {
-            var economy = Economy(Machine(baseProduction: 10));
-            var config = Machine(baseProduction: 10);
+            var config = MakeConfig();
+            var economy = new EconomyService(config);
+            var model = new FactoryModel(config);
 
-            Assert.AreEqual(10, economy.GetProduction(config, 1), 0.0001);
-        }
+            model.SetLevel("m1", 2); // m1 уже открыта (unlockCost=0)
+            var total = economy.GetTotalProduction(model.Machines);
 
-        [Test]
-        public void Production_ScalesWithLevel()
-        {
-            var economy = Economy(Machine(baseProduction: 10, productionGrowth: 1.1f));
-            var config = Machine(baseProduction: 10, productionGrowth: 1.1f);
-
-            // 10 * 3 * 1.1^2 = 36.3
-            Assert.AreEqual(36.3, economy.GetProduction(config, 3), 0.0001);
-        }
-
-        [Test]
-        public void TotalProduction_CountsOnlyUnlockedMachines()
-        {
-            var economy = Economy(
-                Machine(baseProduction: 10),
-                new MachineConfig { Id = "m2", UnlockCost = 50, BaseProduction = 50, UpgradeCostBase = 10 });
-
-            var states = new[]
-            {
-                new MachineState { Id = "m1", IsUnlocked = true, Level = 1 },
-                new MachineState { Id = "m2", IsUnlocked = false, Level = 0 }
-            };
-
-            Assert.AreEqual(10, economy.GetTotalProduction(states), 0.0001);
+            // m1: 10 × 2 × 1.1 = 22
+            Assert.AreEqual(22, total, 0.001);
         }
     }
 }

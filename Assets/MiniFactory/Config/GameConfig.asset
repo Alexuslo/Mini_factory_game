@@ -59,9 +59,9 @@ MonoBehaviour:
     cameraBackground: {r: 0.04, g: 0.05, b: 0.07, a: 1}
     topBarHeight: 240
     topBarOffsetTop: 100
-    topBarColor: {r: 0.12, g: 0.14, b: 0.18, a: 1}
-    balanceTextTop: 46
-    productionTextTop: 152
+    topBarColor: {r: 0.102794595, g: 0.20060524, b: 0.3962264, a: 1}
+    balanceTextTop: 100
+    productionTextTop: 190
     productionTextColor: {r: 0.75, g: 0.8, b: 0.85, a: 1}
     fontBalance: 76
     fontProduction: 44
@@ -73,13 +73,17 @@ MonoBehaviour:
     boostHeight: 76
     cardHeight: 200
     cardSpacing: 24
-    fontCardName: 42
+    fontCardName: 48
     fontCardInfo: 32
     fontCardCost: 30
     fontCardButton: 38
     cardButtonWidth: 210
     cardButtonHeight: 100
     cardButtonMargin: 16
+    cardNameOffsetY: -48
+    cardInfoOffsetY: -100
+    cardCostOffsetY: -150
+    cardButtonLabelOffsetY: 0
     cardBackgroundColor: {r: 0.3, g: 0.3, b: 0.32, a: 1}
     cardLockedColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
     cardUnlockedColor: {r: 0.2, g: 0.45, b: 0.3, a: 1}
@@ -88,11 +92,12 @@ MonoBehaviour:
     cardCostColor: {r: 1, g: 0.85, b: 0.4, a: 1}
     listTopOffset: 500
     listSideMargin: 20
-    storePanelHeight: 130
-    storeMargin: 20
+    storePanelHeight: 256
+    storeMargin: 0
     storeSpacing: 16
     fontStoreButton: 34
-    storeButtonColor: {r: 0.2, g: 0.45, b: 0.32, a: 1}
+    storeButtonLabelOffsetY: 64
+    storeButtonColor: {r: 0.20000002, g: 0.35680255, b: 0.4509804, a: 1}
     fontTitle: 96
     fontTitlePanel: 40
     titleButtonWidth: 640
@@ -113,6 +118,12 @@ MonoBehaviour:
     titlePanelColor: {r: 0.04, g: 0.05, b: 0.07, a: 0.97}
     titleButtonColor: {r: 0.2, g: 0.45, b: 0.32, a: 1}
     titleConfirmColor: {r: 0.65, g: 0.25, b: 0.2, a: 1}
-    tutorialArrowSize: 72
+    tutorialArrowSize: 192
     tutorialArrowOffsetY: 90
-    tutorialArrowColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+    tutorialArrowColor: {r: 1, g: 0.37187305, b: 0.19999999, a: 1}
+  overrideProductionMultiplier: 1
+  experimentProductionMultiplier: 2
+  overrideUpgradeCostMultiplier: 0
+  experimentUpgradeCostMultiplier: 1
+  overrideUnlockCostMultiplier: 0
+  experimentUnlockCostMultiplier: 1

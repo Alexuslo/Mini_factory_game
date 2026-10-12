@@ -38,7 +38,12 @@ namespace MiniFactory.App.View
         {
             var img = GetComponent<Image>();
             if (img != null) img.color = ui.storeButtonColor;
-            if (label != null) label.fontSize = ui.fontStoreButton;
+            if (label != null)
+            {
+                label.fontSize = ui.fontStoreButton;
+                var rt = label.rectTransform;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, ui.storeButtonLabelOffsetY);
+            }
         }
 
         private void Refresh()

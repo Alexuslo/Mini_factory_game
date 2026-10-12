@@ -29,6 +29,7 @@ namespace MiniFactory.App
         [SerializeField] private PurchaseView[] purchaseViews;
         [SerializeField] private TitleScreenView titleScreen;
         [SerializeField] private TutorialOverlay tutorialOverlay;
+        [SerializeField] private ToastView toast;
 
         private GameController _controller;
         private UnityIapService _purchases;
@@ -90,9 +91,6 @@ namespace MiniFactory.App
             };
             remoteConfig.Fetch();
 
-            // сохраняем назначенный вариант (при первом запуске)
-            if (existingProgress == null)
-                save.Save(new Core.Save.PlayerProgress { experimentVariant = variant });
             // analytics: Console всегда; AppMetrica — когда SDK установлен (доп. задание)
             var analyticsProviders = new List<Core.Contracts.IAnalyticsProvider>
             {
@@ -113,6 +111,7 @@ namespace MiniFactory.App
 
             // --- контроллер: собирает всё вместе ---
             _controller = new GameController(config, model, economy, save, analytics, clock, _purchases);
+            _controller.SetExperimentVariant(variant);
 
             // --- туториал: data-driven шаги, регистрация по Id в словаре композера ---
             var tutorial = new TutorialDirector(model, config);
@@ -134,6 +133,7 @@ namespace MiniFactory.App
         private void Start()
         {
             // IAP: продукты из конфига, инициализация асинхронна (Fake Store в редакторе)
+            if (toast != null) _purchases.OnToast += toast.Show;
             var productIds = new List<string>();
             if (_controller.Config.Products != null)
                 foreach (var p in _controller.Config.Products) productIds.Add(p.Id);

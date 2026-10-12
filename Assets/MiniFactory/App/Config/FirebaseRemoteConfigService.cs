@@ -22,6 +22,7 @@ namespace MiniFactory.App.Config
 
         public FirebaseRemoteConfigService()
         {
+            // DefaultInstance в Unity SDK 13.x сам создаёт app из google-services.json
             _rc = FirebaseRemoteConfig.DefaultInstance;
             // дефолты: значения из локального конфига (fallback если fetch не удался)
             _rc.SetDefaultsAsync(CreateDefaults()).ContinueWith(_ =>

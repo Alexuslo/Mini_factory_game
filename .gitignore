@@ -62,3 +62,4 @@ Assets/MiniFactory/Editor/
 Assets/MiniFactory/Editor.meta
 .utmp/
 TestResults.xml
+*.log
