@@ -117,6 +117,7 @@ namespace MiniFactory.App.DebugTools
             var progress = save.HasProgress() ? save.Load() : new Core.Save.PlayerProgress();
             Core.Config.ExperimentSelector.SetVariant(progress, _currentVariant);
             save.Save(progress);
+            _game.SetExperimentVariant(_currentVariant); // иначе автосейв контроллера затрёт вариант старым
 
             Debug.Log($"[Debug] A/B variant → {_currentVariant} (применится при перезапуске)");
         }
@@ -140,8 +141,8 @@ namespace MiniFactory.App.DebugTools
             foreach (var m in _game.Model.Machines)
                 if (!m.IsUnlocked)
                 {
-                    _game.Model.AddBalance(999_999);
-                    _game.UnlockMachine(m.Id);
+                    _game.Model.UnlockMachine(m.Id);
+                    _game.SaveProgress();
                     return;
                 }
         }
@@ -151,8 +152,8 @@ namespace MiniFactory.App.DebugTools
             foreach (var m in _game.Model.Machines)
                 if (m.IsUnlocked)
                 {
-                    _game.Model.AddBalance(999_999);
-                    _game.UpgradeMachine(m.Id);
+                    _game.Model.SetLevel(m.Id, m.Level + 1);
+                    _game.SaveProgress();
                     return;
                 }
         }

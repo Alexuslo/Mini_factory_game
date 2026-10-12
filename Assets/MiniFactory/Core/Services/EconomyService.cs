@@ -34,11 +34,11 @@ namespace MiniFactory.Core.Services
         }
 
         /// <summary>Суммарная производительность открытых машин (без учёта Boost).</summary>
-        public double GetTotalProduction(MachineState[] machines)
+        public double GetTotalProduction(IReadOnlyList<MachineState> machines)
         {
             if (machines == null) return 0;
             double total = 0;
-            for (var i = 0; i < machines.Length; i++)
+            for (var i = 0; i < machines.Count; i++)
             {
                 var state = machines[i];
                 if (state == null || !state.IsUnlocked) continue;

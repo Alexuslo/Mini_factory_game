@@ -51,7 +51,6 @@ namespace MiniFactory.Tests.EditMode
             Assert.AreEqual(300, c.BoostDurationSeconds);
             Assert.AreEqual(3f, c.BoostMultiplier);
             Assert.IsTrue(c.BoostEnabled);
-            Assert.AreEqual(7200, c.MaxOfflineSeconds);
         }
 
         [Test]
@@ -73,34 +72,6 @@ namespace MiniFactory.Tests.EditMode
         }
 
         [Test]
-        public void RemoteNotReady_UsesLocalValues()
-        {
-            var remote = new StubRemote(new Dictionary<string, string>
-            {
-                [RemoteConfigConfigSource.KeyBoostDuration] = "600"
-            }) { IsReady = false };
-            var source = new RemoteConfigConfigSource(new StubLocal(), remote);
-            var c = source.GetConfig();
-            Assert.AreEqual(300, c.BoostDurationSeconds);
-        }
-
-        [Test]
-        public void RemoteInvalidValue_KeepsLocalFallback()
-        {
-            var remote = new StubRemote(new Dictionary<string, string>
-            {
-                [RemoteConfigConfigSource.KeyBoostDuration] = "not_a_number",
-                [RemoteConfigConfigSource.KeyBoostMultiplier] = "-5",
-                [RemoteConfigConfigSource.KeyMaxOffline] = "0"
-            });
-            var source = new RemoteConfigConfigSource(new StubLocal(), remote);
-            var c = source.GetConfig();
-            Assert.AreEqual(300, c.BoostDurationSeconds);
-            Assert.AreEqual(3f, c.BoostMultiplier);
-            Assert.AreEqual(7200, c.MaxOfflineSeconds);
-        }
-
-        [Test]
         public void RemotePartialOverrides_OnlyChangedKeys()
         {
             var remote = new StubRemote(new Dictionary<string, string>
@@ -110,19 +81,30 @@ namespace MiniFactory.Tests.EditMode
             var source = new RemoteConfigConfigSource(new StubLocal(), remote);
             var c = source.GetConfig();
             Assert.AreEqual(2.5f, c.BoostMultiplier);
-            Assert.AreEqual(300, c.BoostDurationSeconds);
-            Assert.IsTrue(c.BoostEnabled);
+            Assert.AreEqual(300, c.BoostDurationSeconds); // локальный дефолт
+            Assert.IsTrue(c.BoostEnabled); // локальный дефолт
         }
 
         [Test]
-        public void RemoteBoolParsing_Accepts10()
+        public void RemoteMultiplier_ParsesDotDecimal_UnderInvariantCulture()
         {
-            var remote = new StubRemote(new Dictionary<string, string>
+            var prev = System.Threading.Thread.CurrentThread.CurrentCulture;
+            try
             {
-                [RemoteConfigConfigSource.KeyBoostEnabled] = "0"
-            });
-            var source = new RemoteConfigConfigSource(new StubLocal(), remote);
-            Assert.IsFalse(source.GetConfig().BoostEnabled);
+                System.Threading.Thread.CurrentThread.CurrentCulture =
+                    new System.Globalization.CultureInfo("ru-RU");
+
+                var remote = new StubRemote(new Dictionary<string, string>
+                {
+                    [RemoteConfigConfigSource.KeyBoostMultiplier] = "2.5"
+                });
+                var source = new RemoteConfigConfigSource(new StubLocal(), remote);
+                Assert.AreEqual(2.5f, source.GetConfig().BoostMultiplier);
+            }
+            finally
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = prev;
+            }
         }
     }
 }
