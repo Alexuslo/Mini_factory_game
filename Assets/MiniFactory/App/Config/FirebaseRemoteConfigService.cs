@@ -15,14 +15,15 @@ namespace MiniFactory.App.Config
     /// </summary>
     public sealed class FirebaseRemoteConfigService : Core.Contracts.IRemoteConfigService
     {
-        private readonly Firebase.RemoteConfig.RemoteConfig _rc;
+        private readonly FirebaseRemoteConfig _rc;
 
         public bool IsReady { get; private set; }
         public event Action Fetched;
 
         public FirebaseRemoteConfigService()
         {
-            _rc = Firebase.RemoteConfig.RemoteConfig.Instance;
+            // DefaultInstance в Unity SDK 13.x сам создаёт app из google-services.json
+            _rc = FirebaseRemoteConfig.DefaultInstance;
             // дефолты: значения из локального конфига (fallback если fetch не удался)
             _rc.SetDefaultsAsync(CreateDefaults()).ContinueWith(_ =>
             {
@@ -52,12 +53,8 @@ namespace MiniFactory.App.Config
 
         public bool TryGetValue(string key, out string value)
         {
-            if (!IsReady)
-            {
-                value = null;
-                return false;
-            }
-
+            // GetValue возвращает активные значения: кэш с прошлого запуска или дефолты.
+            // Не ждём fetch — на 2-м запуске кэш доступен сразу.
             var info = _rc.GetValue(key);
             if (info.Source == ValueSource.RemoteValue || info.Source == ValueSource.DefaultValue)
             {

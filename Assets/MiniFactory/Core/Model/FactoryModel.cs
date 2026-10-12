@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MiniFactory.Core.Config;
 using MiniFactory.Core.Save;
 
@@ -12,10 +13,11 @@ namespace MiniFactory.Core.Model
     public sealed class FactoryModel
     {
         private readonly GameConfig _config;
+        private readonly MachineState[] _machines;
 
         public double Balance { get; private set; }
 
-        public MachineState[] Machines { get; }
+        public IReadOnlyList<MachineState> Machines => _machines;
 
         /// <summary>Момент окончания активного Boost (Unix); 0 — не активен.</summary>
         public long BoostEndUnix { get; private set; }
@@ -35,24 +37,19 @@ namespace MiniFactory.Core.Model
             _config = config ?? throw new ArgumentNullException(nameof(config));
 
             var machines = config.Machines ?? Array.Empty<MachineConfig>();
-            Machines = new MachineState[machines.Length];
+            _machines = new MachineState[machines.Length];
             for (var i = 0; i < machines.Length; i++)
             {
                 // unlockCost == 0 → машина доступна сразу (ТЗ п.1)
                 var unlocked = machines[i].UnlockCost == 0;
-                Machines[i] = new MachineState
-                {
-                    Id = machines[i].Id,
-                    IsUnlocked = unlocked,
-                    Level = unlocked ? 1 : 0
-                };
+                _machines[i] = new MachineState(machines[i].Id, unlocked, unlocked ? 1 : 0);
             }
         }
 
         public MachineState GetMachine(string id)
         {
-            for (var i = 0; i < Machines.Length; i++)
-                if (Machines[i].Id == id) return Machines[i];
+            for (var i = 0; i < _machines.Length; i++)
+                if (_machines[i].Id == id) return _machines[i];
             return null;
         }
 
@@ -76,8 +73,8 @@ namespace MiniFactory.Core.Model
         {
             var machine = GetMachine(id);
             if (machine == null || machine.IsUnlocked) return;
-            machine.IsUnlocked = true;
-            machine.Level = 1;
+            machine.SetUnlocked(true);
+            machine.SetLevel(1);
             OnMachineChanged?.Invoke(machine);
         }
 
@@ -85,7 +82,7 @@ namespace MiniFactory.Core.Model
         {
             var machine = GetMachine(id);
             if (machine == null || !machine.IsUnlocked) return;
-            machine.Level = level;
+            machine.SetLevel(level);
             OnMachineChanged?.Invoke(machine);
         }
 
@@ -106,6 +103,28 @@ namespace MiniFactory.Core.Model
             OnTutorialStepChanged?.Invoke(step);
         }
 
+        /// <summary>Сброс к начальному состоянию (кнопка «Начать сначала»).</summary>
+        public void Reset()
+        {
+            Balance = 0;
+            TutorialStep = 0;
+            BoostStartedUnix = 0;
+            BoostEndUnix = 0;
+
+            var machines = _config.Machines ?? Array.Empty<MachineConfig>();
+            for (var i = 0; i < _machines.Length; i++)
+            {
+                var unlocked = machines[i].UnlockCost == 0;
+                _machines[i].SetUnlocked(unlocked);
+                _machines[i].SetLevel(unlocked ? 1 : 0);
+            }
+
+            OnBalanceChanged?.Invoke(Balance);
+            OnBoostChanged?.Invoke(BoostEndUnix);
+            OnTutorialStepChanged?.Invoke(TutorialStep);
+            foreach (var m in _machines) OnMachineChanged?.Invoke(m);
+        }
+
         /// <summary>Восстановление состояния из сохранения (сырые данные уже прочитаны).</summary>
         public void Restore(PlayerProgress progress)
         {
@@ -122,14 +141,14 @@ namespace MiniFactory.Core.Model
                 var saved = progress.machines[i];
                 var machine = GetMachine(saved.id);
                 if (machine == null) continue; // машина исчезла из конфига — запись игнорируем
-                machine.IsUnlocked = saved.unlocked;
-                machine.Level = saved.level;
+                machine.SetUnlocked(saved.unlocked);
+                machine.SetLevel(saved.level);
             }
 
             // после восстановления сообщаем View, что данные готовы
             OnBalanceChanged?.Invoke(Balance);
             OnBoostChanged?.Invoke(BoostEndUnix);
-            foreach (var m in Machines) OnMachineChanged?.Invoke(m);
+            foreach (var m in _machines) OnMachineChanged?.Invoke(m);
         }
     }
 }

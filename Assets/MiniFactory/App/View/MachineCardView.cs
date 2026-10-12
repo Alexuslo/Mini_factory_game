@@ -68,18 +68,32 @@ namespace MiniFactory.App.View
         {
             lockedColor = ui.cardLockedColor;
             unlockedColor = ui.cardUnlockedColor;
-            if (nameText != null) nameText.fontSize = ui.fontCardName;
+            if (nameText != null)
+            {
+                nameText.fontSize = ui.fontCardName;
+                var rt = nameText.rectTransform;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, ui.cardNameOffsetY);
+            }
             if (infoText != null)
             {
                 infoText.fontSize = ui.fontCardInfo;
                 infoText.color = ui.cardInfoColor;
+                var rt = infoText.rectTransform;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, ui.cardInfoOffsetY);
             }
             if (costText != null)
             {
                 costText.fontSize = ui.fontCardCost;
                 costText.color = ui.cardCostColor;
+                var rt = costText.rectTransform;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, ui.cardCostOffsetY);
             }
-            if (buttonLabel != null) buttonLabel.fontSize = ui.fontCardButton;
+            if (buttonLabel != null)
+            {
+                buttonLabel.fontSize = ui.fontCardButton;
+                var rt = buttonLabel.rectTransform;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, ui.cardButtonLabelOffsetY);
+            }
             if (actionButton != null)
             {
                 var img = actionButton.GetComponent<Image>();

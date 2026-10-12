@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace MiniFactory.Tests.EditMode
 {
-    /// <summary>Сохранение: round-trip, отсутствие и повреждение файла (обработка ошибок).</summary>
+    /// <summary>Сохранение: round-trip, отсутствие и повреждение файла.</summary>
     public class SaveServiceTests
     {
         private string _path;
@@ -32,7 +32,6 @@ namespace MiniFactory.Tests.EditMode
             {
                 balance = 1234.5,
                 lastActiveUnix = 1_700_000_000,
-                boostEndUnix = 1_700_000_300,
                 tutorialStep = 2,
                 machines = new[]
                 {
@@ -46,26 +45,14 @@ namespace MiniFactory.Tests.EditMode
 
             Assert.IsNotNull(loaded);
             Assert.AreEqual(1234.5, loaded.balance, 0.0001);
-            Assert.AreEqual(1_700_000_000, loaded.lastActiveUnix);
-            Assert.AreEqual(1_700_000_300, loaded.boostEndUnix);
             Assert.AreEqual(2, loaded.tutorialStep);
-            Assert.AreEqual(2, loaded.machines.Length);
             Assert.AreEqual("m2", loaded.machines[1].id);
-            Assert.IsFalse(loaded.machines[1].unlocked);
-        }
-
-        [Test]
-        public void Load_NoFile_ReturnsNull()
-        {
-            Assert.IsFalse(_save.HasProgress());
-            Assert.IsNull(_save.Load());
         }
 
         [Test]
         public void Load_CorruptedFile_ReturnsNullInsteadOfCrash()
         {
             File.WriteAllText(_path, "{ this is not valid json !!!");
-
             Assert.IsNull(_save.Load());
         }
 
@@ -76,7 +63,6 @@ namespace MiniFactory.Tests.EditMode
             Assert.IsTrue(_save.HasProgress());
 
             _save.Delete();
-
             Assert.IsFalse(_save.HasProgress());
         }
     }

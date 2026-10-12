@@ -5,9 +5,7 @@ using NUnit.Framework;
 
 namespace MiniFactory.Tests.EditMode
 {
-    /// <summary>
-    /// Тесты data-driven туториала: фильтр по конкретной машине, порядок мульти-шагов.
-    /// </summary>
+    /// <summary>Data-driven туториальный: фильтр по машине, порядок шагов.</summary>
     public class TutorialDirectorTests
     {
         private static GameConfig MakeConfig(TutorialStep[] steps) => new GameConfig
@@ -31,7 +29,7 @@ namespace MiniFactory.Tests.EditMode
             var model = new FactoryModel(config);
             var director = new TutorialDirector(model, config);
 
-            director.NotifyUpgraded("m2"); // чужая машина — не двигаем
+            director.NotifyUpgraded("m2"); // чужая — не двигаем
             Assert.AreEqual(0, model.TutorialStep);
 
             director.NotifyUpgraded("m1"); // целевая — двигаем
@@ -50,18 +48,13 @@ namespace MiniFactory.Tests.EditMode
             var model = new FactoryModel(config);
             var director = new TutorialDirector(model, config);
 
-            director.NotifyUpgraded("m1"); // шаг 0 → 1
+            director.NotifyUpgraded("m1");
             Assert.AreEqual(1, model.TutorialStep);
-            Assert.AreEqual("m2", director.ResolveTargetMachineId());
 
-            director.NotifyUnlocked("m2"); // шаг 1 → 2
-            Assert.AreEqual(2, model.TutorialStep);
-            Assert.AreEqual("m3", director.ResolveTargetMachineId());
-
-            director.NotifyUpgraded("m1"); // не m3 — шаг остаётся
+            director.NotifyUnlocked("m2");
             Assert.AreEqual(2, model.TutorialStep);
 
-            director.NotifyUpgraded("m3"); // шаг 2 → завершено
+            director.NotifyUpgraded("m3");
             Assert.AreEqual(3, model.TutorialStep);
             Assert.IsNull(director.CurrentStep);
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using MiniFactory.Core.Config;
 using MiniFactory.Core.Contracts;
 
@@ -6,12 +7,11 @@ namespace MiniFactory.Core.Services
 {
     /// <summary>
     /// Decorator поверх локального IGameConfigSource: применяет удалённые переопределения
-    /// поверх локальных значений. Если remote недоступен — работает как локальный конфиг.
-    /// Core не знает про Firebase — только про IRemoteConfigService.
+    /// поверх локальных значений. Каждый ключ обрабатывается независимо —
+    /// отсутствие одного не блокирует остальные. Если remote недоступен — локальный конфиг.
     /// </summary>
     public sealed class RemoteConfigConfigSource : IGameConfigSource
     {
-        // Ключи удалённых параметров (ТЗ п.3 — замена источника без изменения логики)
         public const string KeyBoostEnabled = "boost_enabled";
         public const string KeyBoostDuration = "boost_duration_seconds";
         public const string KeyBoostMultiplier = "boost_multiplier";
@@ -29,19 +29,21 @@ namespace MiniFactory.Core.Services
         public GameConfig GetConfig()
         {
             var config = _local.GetConfig();
-            if (_remote == null || !_remote.TryGetValue(KeyBoostEnabled, out var enabled))
-                return config;
+            if (_remote == null) return config;
 
-            // remote доступен — накладываем переопределения
-            config.BoostEnabled = ParseBool(enabled, config.BoostEnabled);
+            if (_remote.TryGetValue(KeyBoostEnabled, out var enabled))
+                config.BoostEnabled = ParseBool(enabled, config.BoostEnabled);
 
-            if (_remote.TryGetValue(KeyBoostDuration, out var duration) && int.TryParse(duration, out var d) && d > 0)
+            if (_remote.TryGetValue(KeyBoostDuration, out var duration)
+                && int.TryParse(duration, NumberStyles.Integer, CultureInfo.InvariantCulture, out var d) && d > 0)
                 config.BoostDurationSeconds = d;
 
-            if (_remote.TryGetValue(KeyBoostMultiplier, out var mult) && float.TryParse(mult, out var m) && m > 0f)
+            if (_remote.TryGetValue(KeyBoostMultiplier, out var mult)
+                && float.TryParse(mult, NumberStyles.Float, CultureInfo.InvariantCulture, out var m) && m > 0f)
                 config.BoostMultiplier = m;
 
-            if (_remote.TryGetValue(KeyMaxOffline, out var offline) && int.TryParse(offline, out var o) && o > 0)
+            if (_remote.TryGetValue(KeyMaxOffline, out var offline)
+                && int.TryParse(offline, NumberStyles.Integer, CultureInfo.InvariantCulture, out var o) && o > 0)
                 config.MaxOfflineSeconds = o;
 
             return config;

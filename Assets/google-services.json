@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "157062392666",
+    "project_id": "mini-factory-game",
+    "storage_bucket": "mini-factory-game.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:157062392666:android:92c5f0e5a6b6330182e163",
+        "android_client_info": {
+          "package_name": "com.minifactory.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe8ja03nRpAqSack7tRwF-CyIgr04Jd5I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

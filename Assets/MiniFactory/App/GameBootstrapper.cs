@@ -29,9 +29,11 @@ namespace MiniFactory.App
         [SerializeField] private PurchaseView[] purchaseViews;
         [SerializeField] private TitleScreenView titleScreen;
         [SerializeField] private TutorialOverlay tutorialOverlay;
+        [SerializeField] private ToastView toast;
 
         private GameController _controller;
         private UnityIapService _purchases;
+        private string _experimentVariant = "A";
 
         /// <summary>Id туториала → директор; композер выдаёт по зашитому у потребителя Id.</summary>
         private readonly Dictionary<string, TutorialDirector> _tutorials
@@ -44,19 +46,51 @@ namespace MiniFactory.App
             // --- слой 1: инфраструктура ---
             var clock = new SystemClock();
             var localSource = new LocalConfigSource(configAsset);
-
-            // Remote Config (доп. задание): decorator поверх локального конфига.
-            // Firebase — за #if MINIFACTORY_FIREBASE; без него — локальный fallback из StreamingAssets.
-            Core.Contracts.IRemoteConfigService remoteConfig =
-#if MINIFACTORY_FIREBASE
-                new FirebaseRemoteConfigService();
-#else
-                new LocalRemoteConfigService();
-#endif
-            remoteConfig.Fetch();
-            var config = new Core.Services.RemoteConfigConfigSource(localSource, remoteConfig).GetConfig();
-
             var save = new JsonSaveService(JsonSaveService.DefaultPath);
+
+            // A/B: вариант из сейва (при первом запуске — случайно, запоминается).
+            // A = контроль (базовый конфиг), B = эксперимент (оверрайды из GameConfigAsset).
+            var existingProgress = save.HasProgress() ? save.Load() : null;
+            var variant = Core.Config.ExperimentSelector.AssignInitial(existingProgress
+                ?? new Core.Save.PlayerProgress());
+            _experimentVariant = variant;
+            var experiment = Core.Config.ExperimentSelector.ResolveExperiment(
+                variant, configAsset.ToExperimentConfig());
+
+            // ExperimentConfigSource: decorator поверх локального; A → прозрачный прокси
+            var baseSource = new Core.Config.ExperimentConfigSource(localSource, experiment);
+
+            // Remote Config (доп. задание): decorator поверх experiment.
+            // Firebase — за #if MINIFACTORY_FIREBASE; fallback — локальный JSON.
+            Core.Contracts.IRemoteConfigService remoteConfig;
+#if MINIFACTORY_FIREBASE
+            try
+            {
+                remoteConfig = new FirebaseRemoteConfigService();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[Bootstrapper] Firebase init failed, falling back to local: {e.Message}");
+                remoteConfig = new LocalRemoteConfigService();
+            }
+#else
+            remoteConfig = new LocalRemoteConfigService();
+#endif
+            var remoteSource = new Core.Services.RemoteConfigConfigSource(baseSource, remoteConfig);
+            var config = remoteSource.GetConfig();
+            // Firebase fetch асинхронный — на первом запуске конфиг строится до завершения.
+            // Когда fetch завершится, перечитываем и обновляем поля на том же экземпляре,
+            // который держит контроллер (GameConfig — mutable fields).
+            remoteConfig.Fetched += () =>
+            {
+                var updated = remoteSource.GetConfig();
+                config.BoostEnabled = updated.BoostEnabled;
+                config.BoostDurationSeconds = updated.BoostDurationSeconds;
+                config.BoostMultiplier = updated.BoostMultiplier;
+                config.MaxOfflineSeconds = updated.MaxOfflineSeconds;
+            };
+            remoteConfig.Fetch();
+
             // analytics: Console всегда; AppMetrica — когда SDK установлен (доп. задание)
             var analyticsProviders = new List<Core.Contracts.IAnalyticsProvider>
             {
@@ -77,6 +111,7 @@ namespace MiniFactory.App
 
             // --- контроллер: собирает всё вместе ---
             _controller = new GameController(config, model, economy, save, analytics, clock, _purchases);
+            _controller.SetExperimentVariant(variant);
 
             // --- туториал: data-driven шаги, регистрация по Id в словаре композера ---
             var tutorial = new TutorialDirector(model, config);
@@ -98,6 +133,7 @@ namespace MiniFactory.App
         private void Start()
         {
             // IAP: продукты из конфига, инициализация асинхронна (Fake Store в редакторе)
+            if (toast != null) _purchases.OnToast += toast.Show;
             var productIds = new List<string>();
             if (_controller.Config.Products != null)
                 foreach (var p in _controller.Config.Products) productIds.Add(p.Id);
@@ -144,7 +180,7 @@ namespace MiniFactory.App
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // debug-панель: 5 тапов в правом верхнем углу (только редактор / dev build)
-            MiniFactory.App.DebugTools.DebugPanelView.Attach(_controller);
+            MiniFactory.App.DebugTools.DebugPanelView.Attach(_controller, _experimentVariant);
 #endif
         }
     }

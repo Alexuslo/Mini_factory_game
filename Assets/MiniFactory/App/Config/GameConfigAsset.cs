@@ -115,6 +115,19 @@ namespace MiniFactory.App.Config
 
             [Tooltip("Отступ кнопки действия от правого края карточки, px")]
             public int cardButtonMargin = 16;
+
+            [Tooltip("Позиция названия машины в карточке, px (по Y, от верха)")]
+            public int cardNameOffsetY = -12;
+
+            [Tooltip("Позиция строки информации (уровень/закрыта), px (по Y)")]
+            public int cardInfoOffsetY = -60;
+
+            [Tooltip("Позиция строки цены, px (по Y)")]
+            public int cardCostOffsetY = -100;
+
+            [Tooltip("Позиция текста на кнопке действия, px (по Y, от центра)")]
+            public int cardButtonLabelOffsetY = 0;
+
             public Color cardBackgroundColor = new Color(0.30f, 0.30f, 0.32f);
             public Color cardLockedColor = new Color(0.35f, 0.35f, 0.35f);
             public Color cardUnlockedColor = new Color(0.20f, 0.45f, 0.30f);
@@ -139,6 +152,10 @@ namespace MiniFactory.App.Config
             [Tooltip("Зазор между кнопками магазина, px")]
             public int storeSpacing = 16;
             public int fontStoreButton = 34;
+
+            [Tooltip("Позиция текста на кнопке магазина, px (по Y, от центра)")]
+            public int storeButtonLabelOffsetY = 0;
+
             public Color storeButtonColor = new Color(0.2f, 0.45f, 0.32f);
 
             [Header("Title")]
@@ -213,6 +230,27 @@ namespace MiniFactory.App.Config
         [Header("UI")]
         [Tooltip("Шрифты и размеры интерфейса (canvas 1080x1920). Применяются при Build Scene")]
         public UiEntry ui = new UiEntry();
+
+        [Header("Experiment (A/B)")]
+        [Tooltip("Множитель базового дохода варианта B; выкл — без изменений (вариант A = контроль)")]
+        public bool overrideProductionMultiplier;
+        public float experimentProductionMultiplier = 1f;
+
+        [Tooltip("Множитель стоимости апгрейда варианта B; выкл — без изменений")]
+        public bool overrideUpgradeCostMultiplier;
+        public float experimentUpgradeCostMultiplier = 1f;
+
+        [Tooltip("Множитель стоимости открытия варианта B; выкл — без изменений")]
+        public bool overrideUnlockCostMultiplier;
+        public float experimentUnlockCostMultiplier = 1f;
+
+        /// <summary>Оверрайды для варианта B; отключённые флаги означают «без изменений».</summary>
+        public Core.Config.ExperimentConfig ToExperimentConfig() => new Core.Config.ExperimentConfig
+        {
+            ProductionMultiplier = overrideProductionMultiplier ? experimentProductionMultiplier : (float?)null,
+            UpgradeCostMultiplier = overrideUpgradeCostMultiplier ? experimentUpgradeCostMultiplier : (float?)null,
+            UnlockCostMultiplier = overrideUnlockCostMultiplier ? experimentUnlockCostMultiplier : (float?)null
+        };
 
         public GameConfig ToGameConfig()
         {

@@ -24,18 +24,24 @@ namespace MiniFactory.Core.Game
         private readonly IGamePurchaseService _purchases;
         private bool _initialized;
 
+        /// <summary>A/B-вариант: хранится в контроллере, пишется/читается из сейва.</summary>
+        private string _experimentVariant = ExperimentSelector.VariantA;
+
         public FactoryModel Model => _model;
         public GameConfig Config => _config;
         public Services.EconomyService Economy => _economy;
 
-        /// <summary>Был ли прогресс на диске — для кнопки «Продолжить».</summary>
-        public bool HasSave => _save.HasProgress();
+        /// <summary>Был ли загружаемый прогресс — для кнопки «Продолжить».</summary>
+        public bool HasSave => _save.Load() != null;
 
         /// <summary>false — покупки недоступны (IAP не инициализировался).</summary>
         public bool PurchasesAvailable => _purchases != null && _purchases.IsAvailable;
 
         /// <summary>Суммарная производительность открытых машин (без Boost).</summary>
         public double TotalProduction => _economy.GetTotalProduction(_model.Machines);
+
+        /// <summary>Текущий A/B-вариант (для сейва и аналитики).</summary>
+        public string ExperimentVariant => _experimentVariant;
 
         public bool IsBoostActive => _model.IsBoostActive(_clock.NowUnix);
 
@@ -124,14 +130,18 @@ namespace MiniFactory.Core.Game
         /// </summary>
         public StartReport Initialize()
         {
-            _initialized = true; // с этого момента разрешены автосохранения
+            _initialized = true;
 
-            var hasSave = _save.HasProgress();
-            PlayerProgress progress = null;
-            if (hasSave)
+            var progress = _save.Load();
+            if (progress != null)
             {
-                progress = _save.Load();
-                if (progress != null) _model.Restore(progress);
+                _model.Restore(progress);
+                if (!string.IsNullOrEmpty(progress.experimentVariant))
+                    _experimentVariant = progress.experimentVariant;
+            }
+            else
+            {
+                SaveProgress();
             }
 
             double offlineIncome = 0;
@@ -140,14 +150,10 @@ namespace MiniFactory.Core.Game
             {
                 (offlineIncome, offlineElapsed) = ApplyOfflineIncome(progress);
             }
-            else
-            {
-                SaveProgress(); // фиксируем стартовое состояние первой машиной
-            }
 
             _analytics.Log(AnalyticsEvents.GameStarted, new Dictionary<string, object>
             {
-                ["has_save"] = hasSave,
+                ["has_save"] = progress != null,
                 ["balance"] = _model.Balance,
                 ["unlocked_machines"] = CountUnlocked()
             });
@@ -155,10 +161,17 @@ namespace MiniFactory.Core.Game
             return new StartReport(progress != null, offlineIncome, offlineElapsed);
         }
 
-        /// <summary>«Начать сначала» (титульный экран): стирает прогресс (ТЗ).</summary>
+        /// <summary>Назначить A/B-вариант (вызывает composition root при первом запуске).</summary>
+        public void SetExperimentVariant(string variant)
+        {
+            _experimentVariant = variant;
+        }
+
+        /// <summary>«Начать сначала» (титульный экран): стирает прогресс и сбрасывает модель (ТЗ).</summary>
         public void RestartProgress()
         {
             _save.Delete();
+            _model.Reset();
             _analytics.Log(AnalyticsEvents.ProgressRestarted);
         }
 
@@ -292,8 +305,8 @@ namespace MiniFactory.Core.Game
             // иначе сворачивание затёрло бы старый сейв свежим пустым состоянием
             if (!_initialized) return;
 
-            var machines = new MachineSave[_model.Machines.Length];
-            for (var i = 0; i < _model.Machines.Length; i++)
+            var machines = new MachineSave[_model.Machines.Count];
+            for (var i = 0; i < _model.Machines.Count; i++)
             {
                 var m = _model.Machines[i];
                 machines[i] = new MachineSave
@@ -311,7 +324,8 @@ namespace MiniFactory.Core.Game
                 lastActiveUnix = _clock.NowUnix,
                 boostEndUnix = _model.BoostEndUnix,
                 boostStartedUnix = _model.BoostStartedUnix,
-                tutorialStep = _model.TutorialStep
+                tutorialStep = _model.TutorialStep,
+                experimentVariant = _experimentVariant
             });
         }
 

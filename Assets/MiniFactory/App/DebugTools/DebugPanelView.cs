@@ -22,11 +22,12 @@ namespace MiniFactory.App.DebugTools
         private RectTransform _panel;
         private int _taps;
         private float _lastTapTime;
+        private string _currentVariant = "A";
 
         /// <summary>
         /// Создаёт невидимую hot-zone в правом верхнем углу canvas и вешает на неё панель.
         /// </summary>
-        public static DebugPanelView Attach(GameController game)
+        public static DebugPanelView Attach(GameController game, string experimentVariant = "A")
         {
             var canvas = FindObjectOfType<Canvas>();
             if (canvas == null) return null;
@@ -44,13 +45,14 @@ namespace MiniFactory.App.DebugTools
             img.color = new Color(0, 0, 0, 0.01f); // почти прозрачная, но ловит клики
 
             var view = hotZone.AddComponent<DebugPanelView>();
-            view.Initialize(game);
+            view.Initialize(game, experimentVariant);
             return view;
         }
 
-        private void Initialize(GameController game)
+        private void Initialize(GameController game, string experimentVariant)
         {
             _game = game;
+            _currentVariant = experimentVariant ?? "A";
             BuildPanel();
             SetPanelVisible(false);
         }
@@ -94,13 +96,44 @@ namespace MiniFactory.App.DebugTools
             layout.childForceExpandWidth = true;
 
             AddLabel(_panel, "DEBUG", 80, TextAnchor.MiddleCenter);
+            AddLabel(_panel, $"A/B: {_currentVariant}", 48, TextAnchor.MiddleCenter);
+            AddButton(_panel, "Переключить A/B", ToggleVariant);
             AddButton(_panel, "+1000 монет", () => _game.Model.AddBalance(1000));
             AddButton(_panel, "+10K монет", () => _game.Model.AddBalance(10_000));
             AddButton(_panel, "Открыть первую закрытую", UnlockFirstLocked);
             AddButton(_panel, "+1 уровень первой", UpgradeFirst);
             AddButton(_panel, "Сбросить туториал", () => _game.Model.SetTutorialStep(0));
+            AddButton(_panel, "Вывести конфиг в лог", LogConfig);
             AddButton(_panel, "Стереть сейв", () => _game.RestartProgress());
             AddButton(_panel, "Закрыть", () => SetPanelVisible(false));
+        }
+
+        private void ToggleVariant()
+        {
+            _currentVariant = _currentVariant == "A" ? "B" : "A";
+
+            // сохраняем в сейв — применится при следующем запуске
+            var save = new MiniFactory.App.Save.JsonSaveService(MiniFactory.App.Save.JsonSaveService.DefaultPath);
+            var progress = save.HasProgress() ? save.Load() : new Core.Save.PlayerProgress();
+            Core.Config.ExperimentSelector.SetVariant(progress, _currentVariant);
+            save.Save(progress);
+            _game.SetExperimentVariant(_currentVariant); // иначе автосейв контроллера затрёт вариант старым
+
+            Debug.Log($"[Debug] A/B variant → {_currentVariant} (применится при перезапуске)");
+        }
+
+        private void LogConfig()
+        {
+            var c = _game.Config;
+            Debug.Log($"[Config] boostEnabled={c.BoostEnabled}");
+            Debug.Log($"[Config] boostDuration={c.BoostDurationSeconds}s");
+            Debug.Log($"[Config] boostMultiplier={c.BoostMultiplier}x");
+            Debug.Log($"[Config] maxOffline={c.MaxOfflineSeconds}s");
+            Debug.Log($"[Config] tutorialId={c.TutorialId}, steps={c.Tutorial?.Length ?? 0}");
+            Debug.Log($"[Config] machines={c.Machines?.Length ?? 0}, products={c.Products?.Length ?? 0}");
+            if (c.Machines != null)
+                foreach (var m in c.Machines)
+                    Debug.Log($"[Config]   machine {m.Id}: unlock={m.UnlockCost}, prod={m.BaseProduction}/s, upgradeBase={m.UpgradeCostBase}");
         }
 
         private void UnlockFirstLocked()
@@ -108,8 +141,8 @@ namespace MiniFactory.App.DebugTools
             foreach (var m in _game.Model.Machines)
                 if (!m.IsUnlocked)
                 {
-                    _game.Model.AddBalance(999_999);
-                    _game.UnlockMachine(m.Id);
+                    _game.Model.UnlockMachine(m.Id);
+                    _game.SaveProgress();
                     return;
                 }
         }
@@ -119,8 +152,8 @@ namespace MiniFactory.App.DebugTools
             foreach (var m in _game.Model.Machines)
                 if (m.IsUnlocked)
                 {
-                    _game.Model.AddBalance(999_999);
-                    _game.UpgradeMachine(m.Id);
+                    _game.Model.SetLevel(m.Id, m.Level + 1);
+                    _game.SaveProgress();
                     return;
                 }
         }
